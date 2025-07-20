@@ -1,0 +1,8 @@
+id=kernelsu_multitool
+name=KernelSU Advanced Multitool
+version=v3.0
+versionCode=3
+author=@overspend1/Wiktor
+description=Comprehensive KernelSU multitool with bootloop protection, system optimization, security tools, performance tuning, module management, and advanced diagnostics. The ultimate toolkit for power users.
+webRoot=/data/adb/modules/kernelsu_multitool/webui
+webPort=8888

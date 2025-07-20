@@ -1,0 +1,8 @@
+id=android_root_helpers
+name=Android Root Helper Modules
+version=v1.0
+versionCode=1
+author=@overspend1/Wiktor
+description=Collection of useful Android root helper modules for system info, permissions, file operations, and device management. Essential utilities for rooted Android devices.
+webRoot=/data/adb/modules/android_root_helpers/webui
+webPort=8889

@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Anti-Bootloop KSU - WebUI</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">
+                        <i class="fas fa-shield-alt"></i>
+                        <h1>Anti-Bootloop KSU</h1>
+                        <span class="version">v2.0</span>
+                    </div>
+                    <div class="header-actions">
+                        <div class="status-indicator" id="connectionStatus">
+                            <i class="fas fa-circle"></i>
+                            <span>Connected</span>
+                        </div>
+                        <button class="btn btn-primary" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav">
+            <div class="container">
+                <ul class="nav-tabs">
+                    <li class="nav-item active" data-tab="dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </li>
+                    <li class="nav-item" data-tab="backups">
+                        <i class="fas fa-hdd"></i> Backups
+                    </li>
+                    <li class="nav-item" data-tab="config">
+                        <i class="fas fa-cog"></i> Configuration
+                    </li>
+                    <li class="nav-item" data-tab="logs">
+                        <i class="fas fa-file-alt"></i> Logs
+                    </li>
+                    <li class="nav-item" data-tab="recovery">
+                        <i class="fas fa-medkit"></i> Recovery
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main">
+            <div class="container">
+                <!-- Dashboard Tab -->
+                <div id="dashboard" class="tab-content active">
+                    <div class="grid">
+                        <!-- System Status Card -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-info-circle"></i> System Status</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="status-grid">
+                                    <div class="status-item">
+                                        <label>Boot Count</label>
+                                        <span id="bootCount" class="value">-</span>
+                                    </div>
+                                    <div class="status-item">
+                                        <label>Max Attempts</label>
+                                        <span id="maxAttempts" class="value">-</span>
+                                    </div>
+                                    <div class="status-item">
+                                        <label>Recovery State</label>
+                                        <span id="recoveryState" class="badge">-</span>
+                                    </div>
+                                    <div class="status-item">
+                                        <label>Total Boots</label>
+                                        <span id="totalBoots" class="value">-</span>
+                                    </div>
+                                    <div class="status-item">
+                                        <label>Uptime</label>
+                                        <span id="uptime" class="value">-</span>
+                                    </div>
+                                    <div class="status-item">
+                                        <label>Safe Mode</label>
+                                        <span id="safeMode" class="badge">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hardware Monitoring Card -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-microchip"></i> Hardware Status</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="hardware-grid">
+                                    <div class="hardware-item">
+                                        <div class="hardware-icon">
+                                            <i class="fas fa-thermometer-half"></i>
+                                        </div>
+                                        <div class="hardware-info">
+                                            <label>CPU Temperature</label>
+                                            <span id="cpuTemp" class="value">-°C</span>
+                                            <div class="progress-bar">
+                                                <div id="cpuTempBar" class="progress-fill"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="hardware-item">
+                                        <div class="hardware-icon">
+                                            <i class="fas fa-memory"></i>
+                                        </div>
+                                        <div class="hardware-info">
+                                            <label>Available RAM</label>
+                                            <span id="availableRam" class="value">- MB</span>
+                                            <div class="progress-bar">
+                                                <div id="ramBar" class="progress-fill"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="hardware-item">
+                                        <div class="hardware-icon">
+                                            <i class="fas fa-hdd"></i>
+                                        </div>
+                                        <div class="hardware-info">
+                                            <label>Storage Health</label>
+                                            <span id="storageHealth" class="value">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="hardwareIssues" class="alert alert-warning" style="display: none;">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <span id="hardwareIssuesText"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Device Information Card -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-mobile-alt"></i> Device Information</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="device-info">
+                                    <div class="info-item">
+                                        <label>Device</label>
+                                        <span id="deviceName">-</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Android Version</label>
+                                        <span id="androidVersion">-</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Kernel Version</label>
+                                        <span id="kernelVersion">-</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <label>Module Version</label>
+                                        <span id="moduleVersion">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backups Tab -->
+                <div id="backups" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-hdd"></i> Kernel Backups</h3>
+                            <button class="btn btn-primary" onclick="createBackup()">
+                                <i class="fas fa-plus"></i> Create Backup
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Size</th>
+                                            <th>Created</th>
+                                            <th>Integrity</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="backupsTable">
+                                        <tr>
+                                            <td colspan="5" class="text-center">Loading backups...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configuration Tab -->
+                <div id="config" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-cog"></i> Module Configuration</h3>
+                            <button class="btn btn-success" onclick="saveConfig()">
+                                <i class="fas fa-save"></i> Save Configuration
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <form id="configForm" class="config-form">
+                                <div class="config-section">
+                                    <h4>Recovery Settings</h4>
+                                    <div class="form-group">
+                                        <label for="maxBootAttempts">Max Boot Attempts</label>
+                                        <input type="number" id="maxBootAttempts" min="1" max="10">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="recoveryStrategy">Recovery Strategy</label>
+                                        <select id="recoveryStrategy">
+                                            <option value="progressive">Progressive</option>
+                                            <option value="aggressive">Aggressive</option>
+                                            <option value="conservative">Conservative</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>
+                                            <input type="checkbox" id="safeModeEnabled"> Enable Safe Mode
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="config-section">
+                                    <h4>Hardware Monitoring</h4>
+                                    <div class="form-group">
+                                        <label>
+                                            <input type="checkbox" id="monitorCpuTemp"> Monitor CPU Temperature
+                                        </label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cpuTempThreshold">CPU Temperature Threshold (°C)</label>
+                                        <input type="number" id="cpuTempThreshold" min="60" max="90">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>
+                                            <input type="checkbox" id="monitorRam"> Monitor RAM Usage
+                                        </label>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="minFreeRam">Minimum Free RAM (MB)</label>
+                                        <input type="number" id="minFreeRam" min="100" max="1000">
+                                    </div>
+                                </div>
+                                
+                                <div class="config-section">
+                                    <h4>Backup Settings</h4>
+                                    <div class="form-group">
+                                        <label for="backupSlots">Number of Backup Slots</label>
+                                        <input type="number" id="backupSlots" min="1" max="5">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>
+                                            <input type="checkbox" id="kernelIntegrityCheck"> Enable Kernel Integrity Checks
+                                        </label>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logs Tab -->
+                <div id="logs" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-file-alt"></i> System Logs</h3>
+                            <div class="header-actions">
+                                <select id="logLines" onchange="loadLogs()">
+                                    <option value="50">Last 50 lines</option>
+                                    <option value="100" selected>Last 100 lines</option>
+                                    <option value="200">Last 200 lines</option>
+                                    <option value="500">Last 500 lines</option>
+                                </select>
+                                <button class="btn btn-secondary" onclick="loadLogs()">
+                                    <i class="fas fa-sync"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="log-container">
+                                <pre id="logContent">Loading logs...</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recovery Tab -->
+                <div id="recovery" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-medkit"></i> Recovery Controls</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="recovery-actions">
+                                <div class="action-group">
+                                    <h4>Emergency Actions</h4>
+                                    <button class="btn btn-warning" onclick="enableSafeMode()">
+                                        <i class="fas fa-shield-alt"></i> Enable Safe Mode
+                                    </button>
+                                    <button class="btn btn-danger" onclick="disableAllModules()">
+                                        <i class="fas fa-ban"></i> Disable All Modules
+                                    </button>
+                                    <button class="btn btn-danger" onclick="emergencyDisable()">
+                                        <i class="fas fa-power-off"></i> Emergency Disable Module
+                                    </button>
+                                </div>
+                                
+                                <div class="action-group">
+                                    <h4>Recovery Operations</h4>
+                                    <button class="btn btn-info" onclick="resetBootCounter()">
+                                        <i class="fas fa-redo"></i> Reset Boot Counter
+                                    </button>
+                                    <button class="btn btn-success" onclick="resetRecoveryState()">
+                                        <i class="fas fa-check"></i> Reset Recovery State
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>Warning:</strong> These actions can affect system stability. Use with caution.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-info">
+                        <span>Advanced Anti-Bootloop KSU Module v2.0</span>
+                        <span>Author: @overspend1/Wiktor</span>
+                    </div>
+                    <div class="footer-links">
+                        <a href="#" onclick="showAbout()">About</a>
+                        <a href="#" onclick="showHelp()">Help</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle"></h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+            </div>
+            <div class="modal-footer" id="modalFooter">
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>
