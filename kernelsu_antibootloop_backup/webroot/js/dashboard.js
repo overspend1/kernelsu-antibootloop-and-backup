@@ -88,7 +88,14 @@ const DashboardController = {
     loadBootHistory: async function() {
         try {
             if (window.AppState.isOffline) {
-                // Use cached data in offline mode
+                // Use mock data in offline mode
+                const mockBootHistory = [
+                    { timestamp: new Date(Date.now() - 86400000).toISOString(), date: new Date(Date.now() - 86400000), status: 'success', duration: 2 },
+                    { timestamp: new Date(Date.now() - 172800000).toISOString(), date: new Date(Date.now() - 172800000), status: 'success', duration: 1 },
+                    { timestamp: new Date(Date.now() - 259200000).toISOString(), date: new Date(Date.now() - 259200000), status: 'recovery', duration: 3 },
+                    { timestamp: new Date(Date.now() - 345600000).toISOString(), date: new Date(Date.now() - 345600000), status: 'success', duration: 2 }
+                ];
+                this.dataCache.bootHistory = mockBootHistory;
                 return;
             }
             
@@ -144,7 +151,21 @@ const DashboardController = {
     loadSystemMetrics: async function() {
         try {
             if (window.AppState.isOffline) {
-                // Use cached data in offline mode
+                // Use mock data in offline mode
+                const mockSystemMetrics = {
+                    cpu: { usage: 45 },
+                    memory: { percentage: 62 },
+                    io: { usage: 28 },
+                    battery: { level: 78 },
+                    protection: { status: 'active', statusText: 'Protection Active' },
+                    system: {
+                        uptime: '3 days, 12 hours',
+                        kernel: 'Linux 5.15.74-android13-8-00205-gf13ba794d41c-ab8949913',
+                        bootTime: '2024-01-18 08:30:15',
+                        bootCount: '127'
+                    }
+                };
+                this.dataCache.systemMetrics = mockSystemMetrics;
                 return;
             }
             
@@ -184,7 +205,25 @@ const DashboardController = {
     loadDiskUsage: async function() {
         try {
             if (window.AppState.isOffline) {
-                // Use cached data in offline mode
+                // Use mock data in offline mode
+                const mockDiskUsage = {
+                    total: '128G',
+                    used: '89G',
+                    free: '39G',
+                    percentage: '69'
+                };
+                this.dataCache.diskUsage = mockDiskUsage;
+                
+                // Update UI immediately
+                document.getElementById('disk-total').textContent = mockDiskUsage.total;
+                document.getElementById('disk-used').textContent = mockDiskUsage.used;
+                document.getElementById('disk-free').textContent = mockDiskUsage.free;
+                
+                const progressBar = document.querySelector('.disk-usage .progress-bar');
+                if (progressBar) {
+                    progressBar.style.width = `${mockDiskUsage.percentage}%`;
+                    progressBar.setAttribute('data-value', mockDiskUsage.percentage);
+                }
                 return;
             }
             
@@ -252,7 +291,14 @@ const DashboardController = {
     loadBackupData: async function() {
         try {
             if (window.AppState.isOffline) {
-                // Use cached data in offline mode
+                // Use mock data in offline mode
+                const mockBackupSizes = [
+                    { name: 'system_backup_2024-01-18.tar.gz', size: 2147483648, formattedSize: '2.0 GB' },
+                    { name: 'data_backup_2024-01-17.zip', size: 1073741824, formattedSize: '1.0 GB' },
+                    { name: 'boot_backup_2024-01-16.tar', size: 536870912, formattedSize: '512 MB' },
+                    { name: 'recovery_backup_2024-01-15.gz', size: 268435456, formattedSize: '256 MB' }
+                ];
+                this.dataCache.backupSizes = mockBackupSizes;
                 return;
             }
             
@@ -306,7 +352,32 @@ const DashboardController = {
     loadActivityLog: async function() {
         try {
             if (window.AppState.isOffline) {
-                // Use cached data in offline mode
+                // Use mock data in offline mode
+                const mockActivityLog = [
+                    {
+                        id: '1',
+                        type: 'backup',
+                        title: 'System Backup Created',
+                        description: 'Full system backup completed successfully',
+                        timestamp: new Date(Date.now() - 3600000).toISOString()
+                    },
+                    {
+                        id: '2',
+                        type: 'safety',
+                        title: 'Bootloop Protection Activated',
+                        description: 'Protection triggered due to boot failure',
+                        timestamp: new Date(Date.now() - 7200000).toISOString()
+                    },
+                    {
+                        id: '3',
+                        type: 'restore',
+                        title: 'Recovery Point Restored',
+                        description: 'System restored from recovery point successfully',
+                        timestamp: new Date(Date.now() - 10800000).toISOString()
+                    }
+                ];
+                this.dataCache.activityLog = mockActivityLog;
+                this.updateActivityLog(mockActivityLog);
                 return;
             }
             
