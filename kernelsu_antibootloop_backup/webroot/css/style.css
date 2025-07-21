@@ -350,6 +350,25 @@ body {
   font-weight: var(--md-sys-typescale-label-small-font-weight);
 }
 
+/* ===== ACCESSIBILITY ===== */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 8px;
+  z-index: 1000;
+  padding: 8px 16px;
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  text-decoration: none;
+  border-radius: var(--md-sys-shape-corner-small);
+  font-weight: var(--md-sys-typescale-label-medium-font-weight);
+  transition: top var(--md-sys-motion-duration-short2) var(--md-sys-motion-easing-standard);
+}
+
+.skip-link:focus {
+  top: 8px;
+}
+
 /* ===== LAYOUT ===== */
 .app {
   display: flex;
@@ -689,7 +708,7 @@ body {
   gap: 8px;
   padding: 10px 24px;
   border: none;
-  border-radius: var(--md-sys-shape-corner-full);
+  border-radius: var(--md-sys-shape-corner-large);
   cursor: pointer;
   font-size: var(--md-sys-typescale-label-large-font-size);
   font-weight: var(--md-sys-typescale-label-large-font-weight);

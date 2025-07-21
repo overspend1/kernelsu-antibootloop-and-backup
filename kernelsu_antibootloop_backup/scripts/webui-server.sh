@@ -157,6 +157,42 @@ get_settings() {
     echo "}"
 }
 
+exec_command_api() {
+    # Read POST body and extract command
+    local command=""
+    if [ -n "$REQUEST_BODY" ]; then
+        # Simple JSON parsing - extract command value
+        command=$(echo "$REQUEST_BODY" | sed -n 's/.*"command":\s*"\([^"]*\)".*/\1/p')
+    fi
+    
+    if [ -z "$command" ]; then
+        echo "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json\r\n\r\n{\"error\":\"Missing command parameter\"}"
+        return
+    fi
+    
+    # Security check - only allow safe commands
+    case "$command" in
+        "getprop "*|"cat /proc/uptime"|"uname -r"|"su -v"|"id"|"whoami"|"date"|"uptime")
+            # Execute safe command and capture output
+            local output
+            output=$(eval "$command" 2>&1)
+            local exit_code=$?
+            
+            # Return JSON response
+            echo "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{"
+            echo "\"status\":\"success\","
+            echo "\"output\":\"$(echo "$output" | sed 's/\\/\\\\/g; s/"/\\"/g')\","
+            echo "\"exit_code\":$exit_code"
+            echo "}"
+            ;;
+        *)
+            echo "HTTP/1.1 403 Forbidden\r\nContent-Type: application/json\r\n\r\n{\"error\":\"Command not allowed for security reasons\"}"
+            ;;
+    esac
+    
+    log_message "Command execution API called: $command"
+}
+
 # Handle API requests
 handle_api_request() {
     REQUEST="$1"
@@ -182,6 +218,9 @@ handle_api_request() {
             ;;
         "/api/settings")
             get_settings
+            ;;
+        "/api/command/exec")
+            exec_command_api
             ;;
         *)
             echo "HTTP/1.1 404 Not Found\r\nContent-Type: application/json\r\n\r\n{\"error\":\"Endpoint not found\"}"

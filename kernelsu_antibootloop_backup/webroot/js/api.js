@@ -1004,9 +1004,92 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     } else {
         console.warn('WebUIX environment not detected. Running in development/fallback mode.');
-        // Define mock ksu object for development
+        
+        // HTTP API Client for backend communication
+        const HTTPClient = {
+            baseURL: `${window.location.protocol}//${window.location.host}`,
+            
+            async request(endpoint, options = {}) {
+                const url = `${this.baseURL}${endpoint}`;
+                const config = {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    ...options
+                };
+                
+                try {
+                    const response = await fetch(url, config);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.warn(`HTTP request failed for ${endpoint}:`, error.message);
+                    throw error;
+                }
+            },
+            
+            async execCommand(cmd) {
+                try {
+                    const response = await this.request('/api/command/exec', {
+                        method: 'POST',
+                        body: JSON.stringify({ command: cmd })
+                    });
+                    return response.output || '';
+                } catch (error) {
+                    console.warn(`Command execution via HTTP failed: ${cmd}`, error.message);
+                    return `Error: ${error.message}`;
+                }
+            },
+            
+            async getSystemInfo() {
+                try {
+                    return await this.request('/api/system/info');
+                } catch (error) {
+                    console.warn('Failed to get system info via HTTP:', error.message);
+                    return null;
+                }
+            },
+            
+            async listBackups() {
+                try {
+                    return await this.request('/api/backups/list');
+                } catch (error) {
+                    console.warn('Failed to list backups via HTTP:', error.message);
+                    return { backups: [] };
+                }
+            },
+            
+            async createBackup(options) {
+                try {
+                    return await this.request('/api/backups/create', {
+                        method: 'POST',
+                        body: JSON.stringify(options)
+                    });
+                } catch (error) {
+                    console.warn('Failed to create backup via HTTP:', error.message);
+                    throw error;
+                }
+            }
+        };
+        
+        // Enhanced ksu object that tries HTTP first, then falls back to mock
         window.ksu = {
-            exec: (cmd) => {
+            exec: async (cmd) => {
+                try {
+                    // Try HTTP client first
+                    const result = await HTTPClient.execCommand(cmd);
+                    if (!result.startsWith('Error:')) {
+                        return result;
+                    }
+                } catch (error) {
+                    console.warn('HTTP execution failed, using mock:', error.message);
+                }
+                
+                // Fallback to mock
                 console.log('Mock exec:', cmd);
                 return `Mock output for: ${cmd}`;
             },
