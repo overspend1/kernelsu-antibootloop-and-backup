@@ -2,7 +2,7 @@
   "name": "KernelSU Anti-Bootloop & Backup",
   "short_name": "KSU Backup",
   "description": "Advanced KernelSU module that combines anti-bootloop protection with comprehensive backup and restoration capabilities for Android system security",
-  "version": "1.1.0",
+  "version": "1.0.0",
   "start_url": "/index.html",
   "id": "/index.html",
   "display": "standalone",

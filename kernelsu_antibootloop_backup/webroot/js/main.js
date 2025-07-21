@@ -1645,3 +1645,397 @@ function showImportDialog() {
     // Initialize switches
     UI.initSwitches();
 }
+
+/**
+ * Import a backup from external storage
+ * @param {string} filename - The backup filename
+ */
+function importBackup(filename) {
+    UI.showLoader('Importing backup...');
+    
+    if (!AppState.isWebUIXConnected) {
+        setTimeout(() => {
+            UI.hideLoader();
+            UI.showToast('Backup imported successfully (mock mode)');
+            
+            // Add mock backup
+            const now = new Date();
+            AppState.backups.push({
+                name: filename,
+                path: `/data/adb/modules/kernelsu_antibootloop_backup/config/backups/${filename}`,
+                size: '1.5G',
+                date: now,
+                type: filename.includes('full') ? 'full' : 'custom'
+            });
+            
+            updateBackupList();
+        }, 2000);
+        return;
+    }
+    
+    // Execute command to copy from downloads
+    executeCommand(`cp /sdcard/Download/${filename} /data/adb/modules/kernelsu_antibootloop_backup/config/backups/`)
+        .then(() => {
+            const useVerification = document.getElementById('import-verification').checked;
+            
+            if (useVerification) {
+                // Verify backup integrity
+                return executeCommand(`sh /data/adb/modules/kernelsu_antibootloop_backup/scripts/backup-engine.sh verify "${filename}"`);
+            } else {
+                return Promise.resolve('Verification skipped');
+            }
+        })
+        .then((verifyResult) => {
+            UI.hideLoader();
+            
+            if (!verifyResult || verifyResult.includes('Verification failed')) {
+                UI.showToast('Backup verification failed', 'error');
+                return;
+            }
+            
+            UI.showToast('Backup imported successfully');
+            
+            // Refresh backup list
+            refreshData();
+            
+            // Log activity
+            logActivity('backup', `Imported backup: ${filename}`);
+        })
+        .catch(error => {
+            UI.hideLoader();
+            UI.showToast('Failed to import backup', 'error');
+            console.error('Error importing backup:', error);
+        });
+}
+
+/**
+ * Show dialog for creating a backup profile
+ */
+function showCreateProfileDialog() {
+    const modalContent = `
+        <div class="create-profile-dialog">
+            <p>Create a custom backup profile:</p>
+            
+            <div class="form-group">
+                <label for="profile-name">Profile Name:</label>
+                <input type="text" id="profile-name" class="md-input" placeholder="Enter profile name">
+            </div>
+            
+            <div class="form-group">
+                <label for="profile-description">Description:</label>
+                <textarea id="profile-description" class="md-input" placeholder="Profile description" rows="3"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Include in Backup:</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="profile-system" checked>
+                        <label for="profile-system">System Partitions</label>
+                    </div>
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="profile-data" checked>
+                        <label for="profile-data">User Data</label>
+                    </div>
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="profile-apps" checked>
+                        <label for="profile-apps">Applications</label>
+                    </div>
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="profile-vendor">
+                        <label for="profile-vendor">Vendor</label>
+                    </div>
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="profile-boot">
+                        <label for="profile-boot">Boot & Recovery</label>
+                    </div>
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="profile-modem">
+                        <label for="profile-modem">Modem</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Default Options:</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="profile-compression" checked>
+                        <label for="profile-compression">Use Compression</label>
+                    </div>
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="profile-encryption">
+                        <label for="profile-encryption">Use Encryption</label>
+                    </div>
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="profile-recovery-point" checked>
+                        <label for="profile-recovery-point">Create Recovery Point</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    UI.showCustomDialog(
+        'Create Backup Profile',
+        modalContent,
+        'Create Profile',
+        'Cancel',
+        () => {
+            createBackupProfile();
+        }
+    );
+}
+
+/**
+ * Create a backup profile
+ */
+function createBackupProfile() {
+    const name = document.getElementById('profile-name').value;
+    const description = document.getElementById('profile-description').value;
+    
+    if (!name) {
+        UI.showToast('Please enter a profile name', 'error');
+        return;
+    }
+    
+    const profile = {
+        name,
+        description,
+        includes: {
+            system: document.getElementById('profile-system').checked,
+            data: document.getElementById('profile-data').checked,
+            apps: document.getElementById('profile-apps').checked,
+            vendor: document.getElementById('profile-vendor').checked,
+            boot: document.getElementById('profile-boot').checked,
+            modem: document.getElementById('profile-modem').checked
+        },
+        options: {
+            compression: document.getElementById('profile-compression').checked,
+            encryption: document.getElementById('profile-encryption').checked,
+            recoveryPoint: document.getElementById('profile-recovery-point').checked
+        },
+        created: new Date().toISOString()
+    };
+    
+    UI.showLoader('Creating profile...');
+    
+    if (!AppState.isWebUIXConnected) {
+        setTimeout(() => {
+            UI.hideLoader();
+            UI.showToast('Profile created successfully (mock mode)');
+        }, 1000);
+        return;
+    }
+    
+    // Save profile
+    const profileJson = JSON.stringify(profile, null, 2);
+    const command = `echo '${profileJson}' > /data/adb/modules/kernelsu_antibootloop_backup/config/profiles/${name}.json`;
+    
+    executeCommand(command)
+        .then(() => {
+            UI.hideLoader();
+            UI.showToast('Profile created successfully');
+            
+            // Log activity
+            logActivity('profile', `Created backup profile: ${name}`);
+        })
+        .catch(error => {
+            UI.hideLoader();
+            UI.showToast('Failed to create profile', 'error');
+            console.error('Error creating profile:', error);
+        });
+}
+
+/**
+ * Execute command with proper error handling
+ * @param {string} cmd - Command to execute
+ * @param {number} timeout - Timeout in milliseconds
+ * @returns {Promise<string>} Command result
+ */
+async function executeCommand(cmd, timeout = 10000) {
+    if (!AppState.isWebUIXConnected) {
+        // Return mock data for development
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve(`Mock output for: ${cmd}`);
+            }, Math.random() * 1000 + 500);
+        });
+    }
+    
+    try {
+        return await ModuleAPI.execCommand(cmd);
+    } catch (error) {
+        console.error('Command execution failed:', error);
+        throw error;
+    }
+}
+
+/**
+ * Log an activity
+ * @param {string} type - Activity type
+ * @param {string} message - Activity message
+ */
+function logActivity(type, message) {
+    const activity = {
+        timestamp: Date.now(),
+        date: new Date(),
+        type,
+        message
+    };
+    
+    AppState.activityLog.unshift(activity);
+    
+    // Keep only last 50 activities
+    if (AppState.activityLog.length > 50) {
+        AppState.activityLog = AppState.activityLog.slice(0, 50);
+    }
+    
+    // Update activity log in dashboard
+    if (typeof Dashboard !== 'undefined' && Dashboard.updateActivityLog) {
+        Dashboard.updateActivityLog();
+    }
+}
+
+/**
+ * Load mock data for development mode
+ */
+function loadMockData() {
+    loadMockSystemInfo();
+    loadMockBackups();
+    loadMockRecoveryPoints();
+    loadMockBootHistory();
+    loadMockDiskSpace();
+    loadMockActivityLog();
+}
+
+function loadMockSystemInfo() {
+    AppState.systemInfo = {
+        deviceModel: 'Mock Device',
+        androidVersion: '13',
+        kernelSUVersion: 'v0.7.0',
+        moduleVersion: APP_CONFIG.version,
+        kernelVersion: '5.4.0-mock'
+    };
+}
+
+function loadMockBackups() {
+    const now = new Date();
+    AppState.backups = [
+        {
+            name: 'full_backup_20240120.tar.gz',
+            path: '/mock/path/full_backup_20240120.tar.gz',
+            size: '2.1G',
+            date: new Date(now.getTime() - 86400000),
+            type: 'full'
+        },
+        {
+            name: 'system_backup_20240119.tar.gz',
+            path: '/mock/path/system_backup_20240119.tar.gz',
+            size: '1.2G',
+            date: new Date(now.getTime() - 172800000),
+            type: 'system'
+        }
+    ];
+}
+
+function loadMockRecoveryPoints() {
+    const now = new Date();
+    AppState.recoveryPoints = [
+        {
+            name: 'recovery_point_1705750800.point',
+            path: '/mock/path/recovery_point_1705750800.point',
+            date: new Date(now.getTime() - 3600000),
+            description: 'Before system update'
+        }
+    ];
+}
+
+function loadMockBootHistory() {
+    const now = new Date();
+    AppState.bootHistory = [
+        {
+            timestamp: now.getTime() - 3600000,
+            date: new Date(now.getTime() - 3600000),
+            status: 'success',
+            duration: 45
+        },
+        {
+            timestamp: now.getTime() - 7200000,
+            date: new Date(now.getTime() - 7200000),
+            status: 'success',
+            duration: 42
+        }
+    ];
+}
+
+function loadMockDiskSpace() {
+    setTimeout(() => {
+        const diskTotal = document.getElementById('disk-total');
+        const diskUsed = document.getElementById('disk-used');
+        const diskFree = document.getElementById('disk-free');
+        
+        if (diskTotal) diskTotal.textContent = '64G';
+        if (diskUsed) diskUsed.textContent = '32G';
+        if (diskFree) diskFree.textContent = '32G';
+        
+        const progressBar = document.querySelector('.disk-usage .progress-bar');
+        if (progressBar) {
+            progressBar.style.width = '50%';
+            progressBar.setAttribute('data-value', '50');
+            progressBar.classList.add('warning');
+        }
+    }, 100);
+}
+
+function loadMockActivityLog() {
+    const now = new Date();
+    AppState.activityLog = [
+        {
+            timestamp: now.getTime() - 1800000,
+            date: new Date(now.getTime() - 1800000),
+            type: 'backup',
+            message: 'Created full backup'
+        },
+        {
+            timestamp: now.getTime() - 3600000,
+            date: new Date(now.getTime() - 3600000),
+            type: 'safety',
+            message: 'Created recovery point'
+        }
+    ];
+}
+
+/**
+ * Format uptime seconds
+ * @param {number} seconds - Uptime in seconds
+ * @returns {string} Formatted uptime
+ */
+function formatUptime(seconds) {
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    
+    if (days > 0) {
+        return `${days}d ${hours}h ${minutes}m`;
+    } else if (hours > 0) {
+        return `${hours}h ${minutes}m`;
+    } else {
+        return `${minutes}m`;
+    }
+}
+
+/**
+ * Format file size
+ * @param {number} bytes - Size in bytes
+ * @returns {string} Formatted size
+ */
+function formatSize(bytes) {
+    if (bytes === 0) return '0 B';
+    
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}

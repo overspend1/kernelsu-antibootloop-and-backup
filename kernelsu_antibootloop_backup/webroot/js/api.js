@@ -34,13 +34,18 @@ const ModuleAPI = {
     },
     
     /**
-     * Execute shell command synchronously
+     * Execute shell command synchronously using KernelSU Next API
      * @param {string} cmd - Shell command to execute
      * @returns {Promise<string>} Command output
      */
     execCommand: async function(cmd) {
         try {
-            return await this._executeKsuCommand('exec', cmd);
+            if (typeof ksu !== 'undefined' && ksu.exec) {
+                const result = ksu.exec(cmd);
+                return result;
+            } else {
+                throw new Error('KernelSU API not available');
+            }
         } catch (error) {
             console.error('Command execution failed:', error);
             throw error;
@@ -48,26 +53,33 @@ const ModuleAPI = {
     },
     
     /**
-     * Execute shell command asynchronously with callback
+     * Execute shell command asynchronously with callback using KernelSU Next API
      * @param {string} cmd - Shell command to execute
      * @param {Function} callback - Callback function to handle result
      */
     execCommandAsync: function(cmd, callback) {
-        const callbackFuncName = `callback_${Date.now()}`;
-        
-        // Define callback function in global scope
-        window[callbackFuncName] = function(exitCode, stdout, stderr) {
-            callback({exitCode, stdout, stderr});
-            // Clean up global function
-            delete window[callbackFuncName];
-        };
-        
-        // Execute command with callback
-        ksu.exec(cmd, callbackFuncName);
+        if (typeof ksu !== 'undefined' && ksu.exec) {
+            const callbackFuncName = `callback_${Date.now()}`;
+            
+            // Define callback function in global scope
+            window[callbackFuncName] = function(exitCode, stdout, stderr) {
+                callback({exitCode, stdout, stderr});
+                // Clean up global function
+                delete window[callbackFuncName];
+            };
+            
+            // Execute command with callback
+            ksu.exec(cmd, callbackFuncName);
+        } else {
+            // Fallback for development mode
+            setTimeout(() => {
+                callback({exitCode: 0, stdout: `Mock output for: ${cmd}`, stderr: ''});
+            }, 100);
+        }
     },
     
     /**
-     * Spawn a shell command with streaming output
+     * Spawn a shell command with streaming output using KernelSU Next API
      * @param {string} command - Shell command to execute
      * @param {Array} args - Command arguments
      * @param {Object} options - Execution options (cwd, env)
@@ -75,6 +87,19 @@ const ModuleAPI = {
      */
     spawnCommand: async function(command, args = [], options = {}) {
         try {
+            if (typeof ksu === 'undefined' || !ksu.spawn) {
+                // Fallback for development mode
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve({
+                            stdout: `Mock spawn output for: ${command} ${args.join(' ')}`,
+                            stderr: '',
+                            exitCode: 0
+                        });
+                    }, 1000);
+                });
+            }
+
             const streamHandlerName = `streamHandler_${Date.now()}`;
             let output = {stdout: '', stderr: '', exitCode: null};
             
@@ -124,28 +149,113 @@ const ModuleAPI = {
     },
     
     /**
-     * Show notification toast
+     * Show notification toast using KernelSU Next API
      * @param {string} message - Notification message
      * @param {string} type - Notification type (info, success, warning, error)
      */
     showNotification: function(message, type = 'info') {
-        ksu.toast(message);
-        UIController.showNotification(message, type);
+        if (typeof ksu !== 'undefined' && ksu.toast) {
+            ksu.toast(message);
+        }
+        if (typeof UIController !== 'undefined') {
+            UIController.showNotification(message, type);
+        } else {
+            console.log(`Notification [${type}]: ${message}`);
+        }
+    },
+
+    /**
+     * Get system package information using KernelSU Next API
+     * @param {string} type - Package type ('system', 'user', 'all')
+     * @returns {Promise<Array>} List of packages
+     */
+    getPackages: async function(type = 'all') {
+        try {
+            if (typeof ksu === 'undefined') {
+                return [];
+            }
+
+            let packages = [];
+            
+            switch(type) {
+                case 'system':
+                    packages = ksu.listSystemPackages();
+                    break;
+                case 'user':
+                    packages = ksu.listUserPackages();
+                    break;
+                case 'all':
+                default:
+                    packages = ksu.listAllPackages();
+                    break;
+            }
+
+            // Parse packages if they're returned as a string
+            if (typeof packages === 'string') {
+                try {
+                    packages = JSON.parse(packages);
+                } catch (e) {
+                    packages = packages.split('\n').filter(p => p.trim());
+                }
+            }
+
+            return Array.isArray(packages) ? packages : [];
+        } catch (error) {
+            console.error('Failed to get packages:', error);
+            return [];
+        }
+    },
+
+    /**
+     * Get detailed package information
+     * @param {Array<string>} packageNames - List of package names
+     * @returns {Promise<Object>} Package details
+     */
+    getPackagesInfo: async function(packageNames) {
+        try {
+            if (typeof ksu === 'undefined' || !ksu.getPackagesInfo) {
+                return {};
+            }
+
+            const packageNamesJson = JSON.stringify(packageNames);
+            const result = ksu.getPackagesInfo(packageNamesJson);
+            
+            return typeof result === 'string' ? JSON.parse(result) : result;
+        } catch (error) {
+            console.error('Failed to get package info:', error);
+            return {};
+        }
     },
     
     /**
-     * Get module information
+     * Get module information using KernelSU Next API
      * @returns {Promise<Object>} Module information
      */
     getModuleInfo: async function() {
         try {
-            const moduleInfoJson = await this._executeKsuCommand('moduleInfo');
-            const moduleInfo = JSON.parse(moduleInfoJson);
-            
-            // Cache module info
-            this.moduleInfo = moduleInfo;
-            
-            return moduleInfo;
+            if (typeof ksu !== 'undefined' && ksu.moduleInfo) {
+                const moduleInfoResult = ksu.moduleInfo();
+                const moduleInfo = typeof moduleInfoResult === 'string' ? 
+                    JSON.parse(moduleInfoResult) : moduleInfoResult;
+                
+                // Cache module info
+                this.moduleInfo = moduleInfo;
+                
+                return moduleInfo;
+            } else {
+                // Return default module info for development mode
+                const defaultInfo = {
+                    id: 'kernelsu_antibootloop_backup',
+                    name: 'KernelSU Anti-Bootloop & Backup',
+                    version: 'v1.0.0',
+                    versionCode: '100',
+                    author: 'Terragon Labs',
+                    description: 'Advanced anti-bootloop protection and comprehensive backup solution'
+                };
+                
+                this.moduleInfo = defaultInfo;
+                return defaultInfo;
+            }
         } catch (error) {
             console.error('Failed to get module information:', error);
             throw error;
@@ -451,36 +561,45 @@ const ModuleAPI = {
     },
     
     /**
-     * Toggle full-screen mode
+     * Toggle full-screen mode using KernelSU Next API
      * @param {boolean} enable - Whether to enable or disable full-screen
      */
     toggleFullScreen: function(enable) {
-        ksu.fullScreen(enable);
+        if (typeof ksu !== 'undefined' && ksu.fullScreen) {
+            ksu.fullScreen(enable);
+        } else {
+            console.log(`Full-screen mode ${enable ? 'enabled' : 'disabled'} (development mode)`);
+        }
     },
     
     /**
-     * Helper method to execute KSU command
-     * @private
-     * @param {string} method - KSU API method name
-     * @param {string} params - Command parameters
-     * @returns {Promise<string>} Command result
+     * Check if running in KernelSU Next environment
+     * @returns {boolean} True if KernelSU Next API is available
      */
-    _executeKsuCommand: async function(method, params = '') {
-        return new Promise((resolve, reject) => {
-            try {
-                if (method === 'exec') {
-                    const result = ksu.exec(params);
-                    resolve(result);
-                } else if (method === 'moduleInfo') {
-                    const result = ksu.moduleInfo();
-                    resolve(result);
-                } else {
-                    reject(new Error(`Unsupported KSU method: ${method}`));
-                }
-            } catch (error) {
-                reject(error);
+    isKernelSUAvailable: function() {
+        return typeof ksu !== 'undefined';
+    },
+
+    /**
+     * Get available KernelSU Next API methods
+     * @returns {Array<string>} Available methods
+     */
+    getAvailableMethods: function() {
+        if (!this.isKernelSUAvailable()) {
+            return [];
+        }
+        
+        const methods = [];
+        const ksuMethods = ['exec', 'spawn', 'toast', 'fullScreen', 'moduleInfo', 
+                           'listSystemPackages', 'listUserPackages', 'listAllPackages', 'getPackagesInfo'];
+        
+        ksuMethods.forEach(method => {
+            if (typeof ksu[method] === 'function') {
+                methods.push(method);
             }
         });
+        
+        return methods;
     },
     
     /**
