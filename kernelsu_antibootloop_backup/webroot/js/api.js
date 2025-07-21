@@ -478,7 +478,7 @@ const ModuleAPI = {
                     name: 'KernelSU Anti-Bootloop & Backup',
                     version: 'v1.0.0',
                     versionCode: '100',
-                    author: 'Terragon Labs',
+                    author: 'Wiktor/overspend1',
                     description: 'Advanced anti-bootloop protection and comprehensive backup solution'
                 };
                 
@@ -1031,7 +1031,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     name: 'KernelSU Anti-Bootloop & Backup',
                     version: 'v1.0.0',
                     versionCode: '1',
-                    author: 'OverModules Team',
+                    author: 'Wiktor/overspend1',
                     description: 'Advanced KernelSU module that combines anti-bootloop protection with comprehensive backup capabilities',
                     moduleDir: '/data/adb/modules/kernelsu_antibootloop_backup'
                 });

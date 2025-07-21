@@ -4,7 +4,7 @@
 # Profile metadata
 name=default
 description=Default backup profile for essential system files
-author=OverModules
+author=Wiktor/overspend1
 version=1.0
 
 # Backup settings
