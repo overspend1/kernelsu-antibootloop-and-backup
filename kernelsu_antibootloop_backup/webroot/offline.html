@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2196F3">
+    <title>Offline - KernelSU Anti-Bootloop & Backup</title>
+    <style>
+        :root {
+            --primary-color: #2196F3;
+            --primary-dark: #1976D2;
+            --text-color: #212121;
+            --text-secondary: #757575;
+            --bg-color: #f5f5f5;
+            --card-color: #ffffff;
+            --danger-color: #F44336;
+            --border-radius: 4px;
+            --shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        body.dark-theme {
+            --primary-color: #0d47a1;
+            --primary-dark: #002171;
+            --text-color: #e0e0e0;
+            --text-secondary: #9e9e9e;
+            --bg-color: #121212;
+            --card-color: #1e1e1e;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .offline-container {
+            max-width: 600px;
+            background-color: var(--card-color);
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+        
+        .logo {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 1.5rem;
+        }
+        
+        h1 {
+            color: var(--primary-dark);
+            margin-bottom: 1rem;
+        }
+        
+        p {
+            margin-bottom: 1.5rem;
+            color: var(--text-secondary);
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .icon-container {
+            margin-bottom: 2rem;
+        }
+        
+        .offline-icon {
+            font-size: 4rem;
+            color: var(--primary-color);
+        }
+        
+        .cached-content {
+            margin-top: 2rem;
+            border-top: 1px solid #eee;
+            padding-top: 2rem;
+        }
+        
+        .cached-content h2 {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            color: var(--primary-dark);
+        }
+        
+        .cached-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .cached-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            padding: 0.5rem;
+            border-radius: var(--border-radius);
+            background-color: rgba(33, 150, 243, 0.1);
+        }
+        
+        .cached-links a:hover {
+            background-color: rgba(33, 150, 243, 0.2);
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            body:not(.light-theme) {
+                --primary-color: #0d47a1;
+                --primary-dark: #002171;
+                --text-color: #e0e0e0;
+                --text-secondary: #9e9e9e;
+                --bg-color: #121212;
+                --card-color: #1e1e1e;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .offline-container {
+                padding: 1.5rem;
+            }
+            
+            .logo {
+                width: 80px;
+                height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="icon-container">
+            <div class="offline-icon">📶</div>
+        </div>
+        <h1>You're Offline</h1>
+        <p>It looks like you've lost your internet connection. Some features may be limited until you're back online.</p>
+        <p>Don't worry! The KernelSU Anti-Bootloop & Backup module will continue to protect your system even when offline.</p>
+        
+        <button id="retry-btn" class="btn">Try Again</button>
+        
+        <div class="cached-content">
+            <h2>Available Offline</h2>
+            <div class="cached-links">
+                <a href="index.html">Dashboard</a>
+                <a href="index.html#backups">Manage Backups</a>
+                <a href="index.html#safety">Safety Settings</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Check if we're using dark mode
+        function applyTheme() {
+            if (localStorage.getItem('theme') === 'dark' || 
+                (localStorage.getItem('theme') !== 'light' && 
+                 window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.body.classList.add('dark-theme');
+            } else {
+                document.body.classList.remove('dark-theme');
+            }
+        }
+        
+        // Apply theme on load
+        applyTheme();
+        
+        // Retry button functionality
+        document.getElementById('retry-btn').addEventListener('click', function() {
+            window.location.reload();
+        });
+        
+        // Check connection status periodically
+        setInterval(function() {
+            if (navigator.onLine) {
+                // If we're back online, redirect to home
+                window.location.href = 'index.html';
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

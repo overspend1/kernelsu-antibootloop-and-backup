@@ -1,0 +1,7 @@
+id=kernelsu_antibootloop_backup
+name=KernelSU Anti-Bootloop & Backup
+version=v1.0.0
+versionCode=1
+author=OverModules
+description=Advanced KernelSU module that combines anti-bootloop protection with comprehensive backup and restoration capabilities.
+updateJson=https://raw.githubusercontent.com/overmodules/kernelsu_antibootloop_backup/main/update.json

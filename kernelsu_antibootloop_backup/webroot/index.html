@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1a73e8" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#3b4252" media="(prefers-color-scheme: dark)">
+    <title>KernelSU Anti-Bootloop & Backup</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="images/icon-192x192.png" type="image/png">
+    <link rel="apple-touch-icon" href="images/icon-192x192.png">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <meta name="description" content="Advanced KernelSU module that combines anti-bootloop protection with comprehensive backup and restoration capabilities">
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <div class="app-container">
+        <header class="app-header" role="banner">
+            <div class="logo-container">
+                <img src="images/logo.svg" alt="KernelSU Anti-Bootloop & Backup Logo" class="logo">
+                <h1>KernelSU Anti-Bootloop & Backup</h1>
+            </div>
+            <div class="header-actions">
+                <button id="notification-button" class="icon-button" aria-label="Notifications" aria-haspopup="true">
+                    <i class="material-icons" aria-hidden="true">notifications</i>
+                    <span id="notification-badge" class="notification-badge hidden" aria-hidden="true">0</span>
+                </button>
+                <button id="theme-toggle" class="icon-button" aria-label="Toggle theme">
+                    <i class="material-icons" aria-hidden="true">brightness_auto</i>
+                </button>
+                <button id="connection-status" class="icon-button webuix-feature" aria-label="WebUIX connection status">
+                    <i class="material-icons" aria-hidden="true">cloud_done</i>
+                </button>
+            </div>
+            <nav class="main-nav" role="navigation" aria-label="Main navigation">
+                <ul role="menubar">
+                    <li role="none"><a href="#dashboard" class="active" data-page="dashboard" role="menuitem" aria-current="page">
+                        <i class="material-icons" aria-hidden="true">dashboard</i>
+                        <span>Dashboard</span>
+                    </a></li>
+                    <li role="none"><a href="#backups" data-page="backups" role="menuitem">
+                        <i class="material-icons" aria-hidden="true">backup</i>
+                        <span>Backups</span>
+                    </a></li>
+                    <li role="none"><a href="#safety" data-page="safety" role="menuitem">
+                        <i class="material-icons" aria-hidden="true">security</i>
+                        <span>Safety</span>
+                    </a></li>
+                    <li role="none"><a href="#settings" data-page="settings" role="menuitem">
+                        <i class="material-icons" aria-hidden="true">settings</i>
+                        <span>Settings</span>
+                    </a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main id="main-content" class="app-content" role="main">
+            <!-- Offline mode banner -->
+            <div id="offline-banner" class="offline-banner hidden" role="alert" aria-live="polite">
+                <i class="material-icons" aria-hidden="true">cloud_off</i>
+                <span>Offline mode - Some features may be limited</span>
+                <button class="btn text" id="offline-details" aria-label="View offline mode details">Details</button>
+            </div>
+
+            <!-- Dashboard Page -->
+            <section id="dashboard" class="page active" role="tabpanel" aria-labelledby="dashboard-heading">
+                <div class="page-header">
+                    <h2 id="dashboard-heading">Dashboard</h2>
+                    <div class="page-actions">
+                        <button id="refresh-dashboard" class="icon-button" aria-label="Refresh dashboard">
+                            <i class="material-icons" aria-hidden="true">refresh</i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="status-cards">
+                    <div class="card md-card">
+                        <div class="card-header">
+                            <h3>System Status</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="status-indicator safe">
+                                <span class="status-dot"></span>
+                                <span class="status-text">Safe</span>
+                            </div>
+                            <p>Last boot: <span id="last-boot">Loading...</span></p>
+                            <p>Boot count: <span id="boot-count">Loading...</span></p>
+                            <p>Protection status: <span id="protection-status">Unknown</span></p>
+                            <p>Uptime: <span id="system-uptime">Loading...</span></p>
+                            <p>Kernel: <span id="kernel-version">Loading...</span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="card md-card">
+                        <div class="card-header">
+                            <h3>Backup Status</h3>
+                        </div>
+                        <div class="card-content">
+                            <p>Last backup: <span id="last-backup">None</span></p>
+                            <p>Available backups: <span id="backup-count">0</span></p>
+                            <p>Storage usage: <span id="storage-usage">0B</span></p>
+                            <div class="card-actions">
+                                <button class="btn primary" id="quick-backup" aria-label="Create quick backup">
+                                    <i class="material-icons" aria-hidden="true">backup</i>
+                                    <span>Quick Backup</span>
+                                    <span class="ripple-container" aria-hidden="true"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card md-card">
+                        <div class="card-header">
+                            <h3>Disk Space</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="disk-usage">
+                                <div class="progress-container">
+                                    <div class="progress-bar determinate" data-value="0" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Disk usage percentage"></div>
+                                </div>
+                                <p>Free: <span id="disk-free">Loading...</span></p>
+                                <p>Used: <span id="disk-used">Loading...</span></p>
+                                <p>Total: <span id="disk-total">Loading...</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- System Metrics Gauges -->
+                <div class="system-metrics card md-card">
+                    <div class="card-header">
+                        <h3>System Metrics</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="metrics-container">
+                            <div class="gauge" id="cpu-gauge" role="img" aria-label="CPU usage gauge"></div>
+                            <div class="gauge" id="memory-gauge" role="img" aria-label="Memory usage gauge"></div>
+                            <div class="gauge" id="io-gauge" role="img" aria-label="I/O activity gauge"></div>
+                            <div class="gauge" id="battery-gauge" role="img" aria-label="Battery level gauge"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Boot History Chart -->
+                <div class="boot-history card md-card">
+                    <div class="card-header">
+                        <h3>Boot History</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="chart-container">
+                            <canvas id="boot-history-chart" role="img" aria-label="Boot history chart showing successful and failed boots over time"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Backup Size Chart -->
+                <div class="backup-sizes card md-card">
+                    <div class="card-header">
+                        <h3>Backup Sizes</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="chart-container">
+                            <canvas id="backup-size-chart" role="img" aria-label="Backup sizes chart showing storage usage by different backup types"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="system-overview card md-card">
+                    <div class="card-header">
+                        <h3>System Overview</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="overview-details">
+                            <p>Device: <span id="device-model">Loading...</span></p>
+                            <p>Android version: <span id="android-version">Loading...</span></p>
+                            <p>KernelSU version: <span id="kernelsu-version">Loading...</span></p>
+                            <p>Module version: <span id="module-version">Loading...</span></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="backup-actions-container">
+                    <!-- Action cards will be dynamically created by UI.js -->
+                </div>
+                
+                <div class="recent-activity card md-card">
+                    <div class="card-header">
+                        <h3>Recent Activity</h3>
+                        <button class="btn icon card-action" id="view-all-activity" aria-label="View all activity">
+                            <i class="material-icons" aria-hidden="true">more_horiz</i>
+                        </button>
+                    </div>
+                    <div class="card-content">
+                        <div class="activity-log" aria-live="polite">
+                            <p class="placeholder-text">No recent activity to display</p>
+                            <!-- Activity items will be dynamically added here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Backups Page -->
+            <section id="backups" class="page" role="tabpanel" aria-labelledby="backups-heading">
+                <div class="page-header">
+                    <h2 id="backups-heading">Backup Management</h2>
+                </div>
+                
+                <div class="action-bar">
+                    <button class="btn primary" id="create-backup" aria-label="Create new backup">
+                        <i class="material-icons" aria-hidden="true">add</i>
+                        <span>Create Backup</span>
+                        <span class="ripple-container" aria-hidden="true"></span>
+                    </button>
+                    <button class="btn secondary" id="import-backup" aria-label="Import backup file">
+                        <i class="material-icons" aria-hidden="true">file_upload</i>
+                        <span>Import</span>
+                        <span class="ripple-container" aria-hidden="true"></span>
+                    </button>
+                    <div class="search-container" role="search">
+                        <i class="material-icons search-icon" aria-hidden="true">search</i>
+                        <input type="text" placeholder="Search backups..." id="search-backups" class="md-input" aria-label="Search backups">
+                    </div>
+                </div>
+                
+                <!-- Backup filters and sorting -->
+                <div class="backup-filters card md-card">
+                    <div class="card-header">
+                        <h3>Filters</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="filter-section">
+                            <h4>Backup Type</h4>
+                            <div class="filter-chips" role="group" aria-label="Filter backups by type">
+                                <div class="chip selectable backup-filter-chip" data-filter="full" role="checkbox" aria-checked="false" tabindex="0">Full</div>
+                                <div class="chip selectable backup-filter-chip" data-filter="system" role="checkbox" aria-checked="false" tabindex="0">System</div>
+                                <div class="chip selectable backup-filter-chip" data-filter="apps" role="checkbox" aria-checked="false" tabindex="0">Apps</div>
+                                <div class="chip selectable backup-filter-chip" data-filter="data" role="checkbox" aria-checked="false" tabindex="0">Data</div>
+                                <div class="chip selectable backup-filter-chip" data-filter="custom" role="checkbox" aria-checked="false" tabindex="0">Custom</div>
+                            </div>
+                        </div>
+                        <div class="filter-section">
+                            <h4>Sort By</h4>
+                            <div class="sort-options" role="radiogroup" aria-label="Sort backups by">
+                                <button class="btn small backup-sort-option active" data-sort="date" role="radio" aria-checked="true">Date</button>
+                                <button class="btn small backup-sort-option" data-sort="name" role="radio" aria-checked="false">Name</button>
+                                <button class="btn small backup-sort-option" data-sort="size" role="radio" aria-checked="false">Size</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="backup-list" role="list" aria-live="polite">
+                    <p class="placeholder-text">No backups available</p>
+                    <!-- Backup items will be dynamically added here -->
+                </div>
+                
+                <div class="backup-profiles card md-card">
+                    <div class="card-header">
+                        <h3>Backup Profiles</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="profile-list">
+                            <div class="profile-item">
+                                <span class="profile-name">Default</span>
+                                <button class="btn small" data-profile="default">
+                                    Use
+                                    <span class="ripple-container"></span>
+                                </button>
+                            </div>
+                            <div class="profile-item">
+                                <span class="profile-name">System Only</span>
+                                <button class="btn small" data-profile="system">
+                                    Use
+                                    <span class="ripple-container"></span>
+                                </button>
+                            </div>
+                            <div class="profile-item">
+                                <span class="profile-name">Apps & Data</span>
+                                <button class="btn small" data-profile="apps">
+                                    Use
+                                    <span class="ripple-container"></span>
+                                </button>
+                            </div>
+                        </div>
+                        <button class="btn secondary" id="create-profile" aria-label="Create new backup profile">
+                            <i class="material-icons" aria-hidden="true">add</i>
+                            <span>Create Profile</span>
+                            <span class="ripple-container" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Safety Page -->
+            <section id="safety" class="page" role="tabpanel" aria-labelledby="safety-heading">
+                <div class="page-header">
+                    <h2 id="safety-heading">Safety Features</h2>
+                </div>
+                
+                <div class="safety-options">
+                    <div class="card md-card">
+                        <div class="card-header">
+                            <h3>Boot Protection</h3>
+                        </div>
+                        <div class="card-content">
+                            <p>Configure how the module responds to boot failures.</p>
+                            <div class="option-group">
+                                <div class="option-row">
+                                    <label for="boot-timeout">Boot timeout (seconds):</label>
+                                    <div class="slider-container">
+                                        <input type="range" id="boot-timeout" value="120" min="30" max="300" step="10" class="md-slider" aria-valuemin="30" aria-valuemax="300" aria-valuenow="120">
+                                        <span class="slider-value" aria-hidden="true">120</span>
+                                    </div>
+                                </div>
+                                <div class="option-row">
+                                    <label for="max-boot-attempts">Max boot attempts:</label>
+                                    <div class="slider-container">
+                                        <input type="range" id="max-boot-attempts" value="3" min="1" max="10" step="1" class="md-slider" aria-valuemin="1" aria-valuemax="10" aria-valuenow="3">
+                                        <span class="slider-value" aria-hidden="true">3</span>
+                                    </div>
+                                </div>
+                                <div class="option-row">
+                                    <label for="auto-restore">Auto-restore on failure:</label>
+                                    <div class="switch-container">
+                                        <input type="checkbox" id="auto-restore" checked aria-checked="true">
+                                        <label class="switch-label" for="auto-restore" aria-hidden="true"></label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card md-card">
+                        <div class="card-header">
+                            <h3>Safe Mode Options</h3>
+                        </div>
+                        <div class="card-content">
+                            <p>Configure safe mode behavior.</p>
+                            <div class="option-group">
+                                <div class="option-row">
+                                    <label for="disable-modules">Disable all modules in safe mode:</label>
+                                    <div class="switch-container">
+                                        <input type="checkbox" id="disable-modules" checked aria-checked="true">
+                                        <label class="switch-label" for="disable-modules" aria-hidden="true"></label>
+                                    </div>
+                                </div>
+                                <div class="option-row">
+                                    <label for="safe-mode-timeout">Safe mode timeout (minutes):</label>
+                                    <div class="slider-container">
+                                        <input type="range" id="safe-mode-timeout" value="5" min="1" max="60" step="1" class="md-slider" aria-valuemin="1" aria-valuemax="60" aria-valuenow="5">
+                                        <span class="slider-value" aria-hidden="true">5</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn secondary" id="test-protection">
+                                    <i class="material-icons">bug_report</i>
+                                    <span>Test Protection</span>
+                                    <span class="ripple-container"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card md-card">
+                        <div class="card-header">
+                            <h3>Recovery Points</h3>
+                        </div>
+                        <div class="card-content">
+                            <p>Manage system recovery points.</p>
+                            <div class="recovery-point-list">
+                                <p class="placeholder-text">No recovery points available</p>
+                                <!-- Recovery point items will be dynamically added here -->
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn primary" id="create-recovery-point">
+                                    <i class="material-icons">restore</i>
+                                    <span>Create Recovery Point</span>
+                                    <span class="ripple-container"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Settings Page -->
+            <section id="settings" class="page">
+                <div class="page-header">
+                    <h2>Module Settings</h2>
+                </div>
+                
+                <div class="settings-container">
+                    <div class="settings-group card md-card">
+                        <div class="card-header">
+                            <h3>General Settings</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="setting-row">
+                                <span>WebUI Enabled:</span>
+                                <div class="switch-container">
+                                    <input type="checkbox" id="webui-enabled" checked>
+                                    <label class="switch-label" for="webui-enabled"></label>
+                                </div>
+                            </div>
+                            <div class="setting-row">
+                                <span>WebUI Port:</span>
+                                <input type="number" id="webui-port" value="8080" min="1024" max="65535" class="md-input">
+                            </div>
+                            <div class="setting-row">
+                                <span>Authentication Required:</span>
+                                <div class="switch-container">
+                                    <input type="checkbox" id="auth-required" checked>
+                                    <label class="switch-label" for="auth-required"></label>
+                                </div>
+                            </div>
+                            <div class="setting-row">
+                                <span>Debug Logging:</span>
+                                <div class="switch-container">
+                                    <input type="checkbox" id="debug-logging">
+                                    <label class="switch-label" for="debug-logging"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-group card md-card">
+                        <div class="card-header">
+                            <h3>Backup Settings</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="setting-row">
+                                <span>Encryption:</span>
+                                <div class="switch-container">
+                                    <input type="checkbox" id="backup-encryption">
+                                    <label class="switch-label" for="backup-encryption"></label>
+                                </div>
+                            </div>
+                            <div class="setting-row">
+                                <span>Compression:</span>
+                                <div class="switch-container">
+                                    <input type="checkbox" id="backup-compression" checked>
+                                    <label class="switch-label" for="backup-compression"></label>
+                                </div>
+                            </div>
+                            <div class="setting-row">
+                                <span>Auto Backup:</span>
+                                <div class="switch-container">
+                                    <input type="checkbox" id="auto-backup">
+                                    <label class="switch-label" for="auto-backup"></label>
+                                </div>
+                            </div>
+                            <div class="setting-row">
+                                <span>Backup Schedule:</span>
+                                <select id="backup-schedule" class="md-select">
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly" selected>Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="boot">Every Boot</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-group card md-card">
+                        <div class="card-header">
+                            <h3>Advanced Settings</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="setting-row">
+                                <span>OverlayFS:</span>
+                                <div class="switch-container">
+                                    <input type="checkbox" id="use-overlayfs" checked>
+                                    <label class="switch-label" for="use-overlayfs"></label>
+                                </div>
+                            </div>
+                            <div class="setting-row">
+                                <span>SELinux Mode:</span>
+                                <select id="selinux-mode" class="md-select">
+                                    <option value="keep">Keep System Setting</option>
+                                    <option value="enforcing" selected>Enforcing</option>
+                                    <option value="permissive">Permissive</option>
+                                </select>
+                            </div>
+                            <div class="setting-row">
+                                <span>Storage Path:</span>
+                                <input type="text" id="storage-path" value="/data/adb/modules/kernelsu_antibootloop_backup/config/backups" class="md-input">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-group card md-card">
+                        <div class="card-header">
+                            <h3>Notification Settings</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="setting-row">
+                                <span>Enable Notifications:</span>
+                                <div class="switch-container">
+                                    <input type="checkbox" id="notifications-enabled" checked>
+                                    <label class="switch-label" for="notifications-enabled"></label>
+                                </div>
+                            </div>
+                            <div class="setting-row">
+                                <span>Show Backup Notifications:</span>
+                                <div class="switch-container">
+                                    <input type="checkbox" id="backup-notifications" checked>
+                                    <label class="switch-label" for="backup-notifications"></label>
+                                </div>
+                            </div>
+                            <div class="setting-row">
+                                <span>Show Safety Notifications:</span>
+                                <div class="switch-container">
+                                    <input type="checkbox" id="safety-notifications" checked>
+                                    <label class="switch-label" for="safety-notifications"></label>
+                                </div>
+                            </div>
+                            <div class="setting-row">
+                                <span>Show System Notifications:</span>
+                                <div class="switch-container">
+                                    <input type="checkbox" id="system-notifications" checked>
+                                    <label class="switch-label" for="system-notifications"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn primary" id="save-settings">
+                        <i class="material-icons">save</i>
+                        <span>Save Settings</span>
+                        <span class="ripple-container"></span>
+                    </button>
+                    <button class="btn secondary" id="reset-settings">
+                        <i class="material-icons">restore</i>
+                        <span>Reset to Defaults</span>
+                        <span class="ripple-container"></span>
+                    </button>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="app-footer">
+            <p>KernelSU Anti-Bootloop & Backup v1.0.0 | &copy; 2025 OverModules</p>
+            <p><a href="#" id="view-logs">View Logs</a> | <a href="#" id="about">About</a></p>
+        </footer>
+    </div>
+    
+    <!-- Bottom Navigation -->
+    <nav id="bottom-nav" class="bottom-navigation">
+        <div class="bottom-nav-item active" data-page="dashboard">
+            <i class="material-icons">dashboard</i>
+            <span>Dashboard</span>
+            <span class="ripple-container"></span>
+        </div>
+        <div class="bottom-nav-item" data-page="backups">
+            <i class="material-icons">backup</i>
+            <span>Backups</span>
+            <span class="ripple-container"></span>
+        </div>
+        <div class="bottom-nav-item" data-page="safety">
+            <i class="material-icons">security</i>
+            <span>Safety</span>
+            <span class="ripple-container"></span>
+        </div>
+        <div class="bottom-nav-item" data-page="settings">
+            <i class="material-icons">settings</i>
+            <span>Settings</span>
+            <span class="ripple-container"></span>
+        </div>
+    </nav>
+    
+    <!-- Floating Action Button -->
+    <div class="fab-container">
+        <button class="fab" id="main-fab">
+            <i class="material-icons">add</i>
+            <span class="ripple-container"></span>
+        </button>
+    </div>
+    
+    <!-- Modal templates -->
+    <div class="modal" id="modal-container">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Modal Title</h2>
+                <button class="modal-close" aria-label="Close">
+                    <i class="material-icons">close</i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Modal content will be dynamically inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary" id="modal-cancel">Cancel</button>
+                <button class="btn primary" id="modal-confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Indicator -->
+    <div id="loading-indicator" class="loader-container" style="display: none;">
+        <div class="loader-content">
+            <div class="loader-spinner"></div>
+            <div class="loader-message">Loading...</div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

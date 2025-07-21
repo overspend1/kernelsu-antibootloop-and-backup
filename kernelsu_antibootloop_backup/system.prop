@@ -1,0 +1,18 @@
+# KernelSU Anti-Bootloop & Backup Module System Properties
+
+# Bootloop prevention properties
+ro.boot.verifiedbootstate=green
+ro.boot_completed_timeout=120
+
+# Backup engine optimizations
+dalvik.vm.heapstartsize=16m
+dalvik.vm.heapgrowthlimit=256m
+dalvik.vm.heapsize=512m
+
+# WebUIX service properties
+net.kernelsu.webui.port=8080
+net.kernelsu.webui.auth=true
+
+# Debug properties (disabled by default)
+# persist.log.tag.KernelSUBackup=VERBOSE
+# persist.log.tag.AntiBootloop=VERBOSE

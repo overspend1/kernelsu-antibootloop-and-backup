@@ -1,0 +1,27 @@
+# KernelSU Anti-Bootloop & Backup Module SELinux Policy Rules
+
+# Allow module to access system files for backup/restore
+allow system_server system_file dir { read open getattr search };
+allow system_server system_file file { read open getattr execute execute_no_trans };
+
+# Allow module to write to data partition for backup storage
+allow system_server app_data_file dir { create write add_name remove_name rmdir setattr };
+allow system_server app_data_file file { create write append unlink setattr };
+
+# Allow WebUIX to run as a service
+type webui_service, domain;
+allow webui_service app_data_file:dir { create search getattr write add_name remove_name rmdir setattr };
+allow webui_service app_data_file:file { create getattr read write append unlink };
+allow webui_service self:netlink_socket { create bind read write };
+allow webui_service node:tcp_socket node_bind;
+allow webui_service port:tcp_socket name_bind;
+
+# Allow boot monitoring for anti-bootloop features
+allow system_server system_prop:property_service set;
+allow system_server sysfs:file { read open write getattr };
+allow system_server block_device:dir search;
+allow system_server block_device:blk_file { read open getattr };
+
+# Allow OverlayFS mount operations
+allow system_server labeledfs:filesystem mount;
+allow system_server system_file:dir mounton;

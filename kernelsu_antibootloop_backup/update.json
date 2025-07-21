@@ -1,0 +1,16 @@
+{
+  "version": "v1.0.0",
+  "versionCode": 1,
+  "zipUrl": "https://github.com/overmodules/kernelsu_antibootloop_backup/releases/download/v1.0.0/kernelsu_antibootloop_backup-v1.0.0.zip",
+  "changelog": "Initial release of KernelSU Anti-Bootloop & Backup Module\n\nFeatures:\n- Anti-bootloop protection with automatic recovery\n- Comprehensive backup and restoration system\n- OverlayFS integration for safe system modifications\n- WebUIX interface for easy management\n- Boot monitoring and safety features\n- Encryption support for backups\n- Profile-based backup configuration",
+  "minKsu": "2",
+  "minApi": "23",
+  "githubUrl": "https://github.com/overmodules/kernelsu_antibootloop_backup",
+  "support": {
+    "donation": "https://example.com/donate",
+    "issues": "https://github.com/overmodules/kernelsu_antibootloop_backup/issues",
+    "discussion": "https://github.com/overmodules/kernelsu_antibootloop_backup/discussions"
+  },
+  "releaseNotes": "Welcome to the first release of the KernelSU Anti-Bootloop & Backup Module. This module combines robust anti-bootloop protection with comprehensive backup capabilities to keep your device safe from soft bricks and data loss.",
+  "developmentStatus": "stable"
+}

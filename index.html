@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebUI-Next API Test</title>
+    <style>
+        body { font-family: monospace; background: #222; color: #eee; }
+        button { margin: 4px; }
+        pre { background: #111; color: #0f0; padding: 8px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h2>WebUI-Next API Test</h2>
+    <button onclick="listAll()">List All Packages</button>
+    <button onclick="listSystem()">List System Packages</button>
+    <button onclick="listUser()">List User Packages</button>
+    <button onclick="listAllInfo()">Get All Packages Info</button>
+    <button onclick="listSystemInfo()">Get System Packages Info</button>
+    <button onclick="listUserInfo()">Get User Packages Info</button>
+    <button onclick="listSystemWithIcons()">List System Packages With Icons</button>
+    <button onclick="listUserWithIcons()">List User Packages With Icons</button>
+    <button onclick="listAllWithIcons()">List All Packages With Icons</button>
+    <pre id="output"></pre>
+    <script>
+        let isFullScreen = false;
+        
+        function show(data) {
+            document.getElementById('output').textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        }
+
+        function showHtml(html) {
+            document.getElementById('output').innerHTML = html;
+        }
+
+        // Shell Command APIs
+        function testExecSync() {
+            try {
+                const output = ksu.exec("ls /system");
+                show("Sync exec output:\n" + output);
+            } catch (e) { show("Error: " + e.toString()); }
+        }
+
+        function testExecAsync() {
+            try {
+                ksu.exec("ls /data", "handleAsyncResult");
+                show("Async exec command sent, waiting for result...");
+            } catch (e) { show("Error: " + e.toString()); }
+        }
+
+        function handleAsyncResult(exitCode, stdout, stderr) {
+            show(`Async Result:\nExit Code: ${exitCode}\nStdout: ${stdout}\nStderr: ${stderr}`);
+        }
+
+        function testExecWithOptions() {
+            try {
+                const options = JSON.stringify({
+                    cwd: "/system",
+                    env: { PATH: "/system/bin" }
+                });
+                ksu.exec("pwd && echo $PATH", options, "handleOptionsResult");
+                show("Exec with options sent, waiting for result...");
+            } catch (e) { show("Error: " + e.toString()); }
+        }
+
+        function handleOptionsResult(exitCode, stdout, stderr) {
+            show(`Options Result:\nExit Code: ${exitCode}\nStdout: ${stdout}\nStderr: ${stderr}`);
+        }
+
+        function testSpawn() {
+            try {
+                const args = JSON.stringify(["-l", "/system"]);
+                const options = JSON.stringify({ cwd: "/system" });
+                ksu.spawn("ls", args, options, "streamHandler");
+                show("Spawn command started, streaming output...");
+            } catch (e) { show("Error: " + e.toString()); }
+        }
+
+        const streamHandler = {
+            stdout: {
+                emit: (event, data) => {
+                    if (event === "data") {
+                        const current = document.getElementById('output').textContent;
+                        show(current + "\nStdout: " + data);
+                    }
+                }
+            },
+            stderr: {
+                emit: (event, data) => {
+                    if (event === "data") {
+                        const current = document.getElementById('output').textContent;
+                        show(current + "\nStderr: " + data);
+                    }
+                }
+            },
+            emit: (event, data) => {
+                if (event === "exit") {
+                    const current = document.getElementById('output').textContent;
+                    show(current + "\nProcess exited with code: " + data);
+                }
+                if (event === "error") {
+                    const current = document.getElementById('output').textContent;
+                    show(current + "\nError: " + JSON.stringify(data));
+                }
+            }
+        };
+
+        function runCustomCommand() {
+            try {
+                const cmd = document.getElementById('customCmd').value;
+                if (!cmd.trim()) {
+                    show("Please enter a command");
+                    return;
+                }
+                const output = ksu.exec(cmd);
+                show(`Command: ${cmd}\nOutput:\n${output}`);
+            } catch (e) { show("Error: " + e.toString()); }
+        }
+
+        // UI Control APIs
+        function showToast() {
+            try {
+                ksu.toast("Hello from WebUI-Next! API test successful.");
+                show("Toast message sent!");
+            } catch (e) { show("Error: " + e.toString()); }
+        }
+
+        function toggleFullScreen() {
+            try {
+                isFullScreen = !isFullScreen;
+                ksu.fullScreen(isFullScreen);
+                show(`Full screen ${isFullScreen ? 'enabled' : 'disabled'}`);
+            } catch (e) { show("Error: " + e.toString()); }
+        }
+
+        function getModuleInfo() {
+            try {
+                const moduleInfo = JSON.parse(ksu.moduleInfo());
+                show(moduleInfo);
+            } catch (e) { show("Error: " + e.toString()); }
+        }
+
+        // Package Management APIs
+        function listAll() {
+            try {
+                const pkgs = JSON.parse(ksu.listAllPackages());
+                show(pkgs);
+            } catch (e) { show(e.toString()); }
+        }
+
+        function listSystem() {
+            try {
+                const pkgs = JSON.parse(ksu.listSystemPackages());
+                show(pkgs);
+            } catch (e) { show(e.toString()); }
+        }
+
+        function listUser() {
+            try {
+                const pkgs = JSON.parse(ksu.listUserPackages());
+                show(pkgs);
+            } catch (e) { show(e.toString()); }
+        }
+
+        function listAllInfo() {
+            try {
+                const pkgs = JSON.parse(ksu.listAllPackages());
+                const info = JSON.parse(ksu.getPackagesInfo(JSON.stringify(pkgs)));
+                show(info);
+            } catch (e) { show(e.toString()); }
+        }
+
+        function listSystemInfo() {
+            try {
+                const pkgs = JSON.parse(ksu.listSystemPackages());
+                const info = JSON.parse(ksu.getPackagesInfo(JSON.stringify(pkgs)));
+                show(info);
+            } catch (e) { show(e.toString()); }
+        }
+
+        function listUserInfo() {
+            try {
+                const pkgs = JSON.parse(ksu.listUserPackages());
+                const info = JSON.parse(ksu.getPackagesInfo(JSON.stringify(pkgs)));
+                show(info);
+            } catch (e) { show(e.toString()); }
+        }
+    
+        function listAllWithIcons(size = 50) {
+            try {
+                const pkgs = JSON.parse(ksu.listAllPackages());
+                const iconsInfo = JSON.parse(ksu.getPackagesIcons(JSON.stringify(pkgs), size));
+                let html = "";
+                for (const info of iconsInfo) {
+                    html += `<div style="display:flex;align-items:center;margin-bottom:8px;">
+                                <img src="${info.icon}" style="width:${size}px;height:${size}px;margin-right:8px;border-radius:6px;background:#333;object-fit:contain;">
+                                <span>${info.packageName}</span>
+                            </div>`;
+                }
+                showHtml(html || "No packages found.");
+            } catch (e) {
+                show(e.toString());
+            }
+        }
+        
+        function listSystemWithIcons(size = 50) {
+            try {
+                const pkgs = JSON.parse(ksu.listSystemPackages());
+                const iconsInfo = JSON.parse(ksu.getPackagesIcons(JSON.stringify(pkgs), size));
+                let html = "";
+                for (const info of iconsInfo) {
+                    html += `<div style="display:flex;align-items:center;margin-bottom:8px;">
+                                <img src="${info.icon}" style="width:${size}px;height:${size}px;margin-right:8px;border-radius:6px;background:#333;object-fit:contain;">
+                                <span>${info.packageName}</span>
+                            </div>`;
+                }
+                showHtml(html || "No packages found.");
+            } catch (e) {
+                show(e.toString());
+            }
+        }
+
+        function listUserWithIcons(size = 50) {
+            try {
+                const pkgs = JSON.parse(ksu.listUserPackages());
+                const iconsInfo = JSON.parse(ksu.getPackagesIcons(JSON.stringify(pkgs), size));
+                let html = "";
+                for (const info of iconsInfo) {
+                    html += `<div style="display:flex;align-items:center;margin-bottom:8px;">
+                                <img src="${info.icon}" style="width:${size}px;height:${size}px;margin-right:8px;border-radius:6px;background:#333;object-fit:contain;">
+                                <span>${info.packageName}</span>
+                            </div>`;
+                }
+                showHtml(html || "No packages found.");
+            } catch (e) {
+                show(e.toString());
+            }
+        }
+
+        function cacheIcons() {
+            try {
+                ksu.cacheAllPackageIcons(100);
+                show("Package icons cached successfully!");
+            } catch (e) { show("Error: " + e.toString()); }
+        }
+
+        // Cache all package icons on page load
+        window.onload = function() {
+            setTimeout(function() {
+                try { 
+                    ksu.cacheAllPackageIcons(100);
+                    show("WebUI-Next API Test Ready!\nPackage icons cached automatically.");
+                } catch(e) {
+                    show("WebUI-Next API Test Ready!\nNote: Icon caching failed - " + e.toString());
+                }
+            }, 100); // 100ms delay lets UI render first
+        };
+    </script>
+</body>
+</html>
