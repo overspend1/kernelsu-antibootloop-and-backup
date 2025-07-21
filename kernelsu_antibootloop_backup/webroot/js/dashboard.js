@@ -43,6 +43,11 @@ const DashboardController = {
                 this.refreshDashboard();
             });
         }
+        
+        // Refresh dashboard immediately for initial load
+        setTimeout(() => {
+            this.refreshDashboard();
+        }, 500);
     },
     
     /**

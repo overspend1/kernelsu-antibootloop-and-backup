@@ -6,7 +6,7 @@ API=`getprop ro.build.version.sdk`
 
 # Print module information
 ui_print "- KernelSU Anti-Bootloop & Backup Module"
-ui_print "- By OverModules"
+ui_print "- By Wiktor/overspend1"
 ui_print "- API Level: $API"
 
 # Check device compatibility
@@ -59,6 +59,7 @@ check_device_compatibility() {
             # Check for MIUI-specific issues
             if getprop ro.miui.ui.version.name >/dev/null 2>&1; then
                 ui_print "- MIUI detected, enabling compatibility mode"
+                mkdir -p "$MODDIR/config"
                 echo "miui=true" >> "$MODDIR/config/device.conf"
             fi
             ;;
@@ -67,11 +68,13 @@ check_device_compatibility() {
             # Check for Knox
             if getprop ro.boot.warranty_bit >/dev/null 2>&1; then
                 ui_print "- Knox detected, some features may be limited"
+                mkdir -p "$MODDIR/config"
                 echo "knox=true" >> "$MODDIR/config/device.conf"
             fi
             ;;
         "OnePlus")
             ui_print "- OnePlus device detected"
+            mkdir -p "$MODDIR/config"
             echo "oneplus=true" >> "$MODDIR/config/device.conf"
             ;;
         *)
@@ -88,19 +91,26 @@ setup_permissions() {
     ui_print "- Setting up permissions..."
     
     # Set executable permissions for all scripts
-    find "$MODDIR/scripts" -type f -name "*.sh" -exec chmod 755 {} \;
+    if [ -d "$MODDIR/scripts" ]; then
+        find "$MODDIR/scripts" -type f -name "*.sh" -exec chmod 755 {} \;
+    fi
     
-    # Set permissions for binary executables
-    find "$MODDIR/binary" -type f -exec chmod 755 {} \;
+    # Set permissions for binary executables (if exists)
+    if [ -d "$MODDIR/binary" ]; then
+        find "$MODDIR/binary" -type f -exec chmod 755 {} \;
+    fi
     
     # Ensure config directory is accessible
+    mkdir -p "$MODDIR/config"
     chmod 755 "$MODDIR/config"
     
     # Set permissions for WebUI
     chmod -R 755 "$MODDIR/webroot"
     
     # Ensure template directory is accessible
-    chmod 755 "$MODDIR/templates"
+    if [ -d "$MODDIR/templates" ]; then
+        chmod 755 "$MODDIR/templates"
+    fi
     
     ui_print "- Permissions set successfully"
 }
