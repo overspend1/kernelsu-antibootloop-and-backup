@@ -455,7 +455,12 @@ const DashboardController = {
         
         // Check if Chart.js is loaded
         if (typeof Chart === 'undefined') {
-            console.error('Chart.js is not loaded, skipping boot history chart');
+            console.error('Chart.js is not loaded, showing placeholder instead');
+            bootHistoryCanvas.style.display = 'none';
+            const placeholder = document.createElement('div');
+            placeholder.className = 'chart-placeholder';
+            placeholder.innerHTML = '<p>Charts require internet connection</p><button class="btn small" onclick="location.reload()">Reload</button>';
+            bootHistoryCanvas.parentNode.appendChild(placeholder);
             return;
         }
         
@@ -549,7 +554,12 @@ const DashboardController = {
         
         // Check if Chart.js is loaded
         if (typeof Chart === 'undefined') {
-            console.error('Chart.js is not loaded, skipping backup size chart');
+            console.error('Chart.js is not loaded, showing placeholder instead');
+            backupSizeCanvas.style.display = 'none';
+            const placeholder = document.createElement('div');
+            placeholder.className = 'chart-placeholder';
+            placeholder.innerHTML = '<p>Charts require internet connection</p><button class="btn small" onclick="location.reload()">Reload</button>';
+            backupSizeCanvas.parentNode.appendChild(placeholder);
             return;
         }
         
@@ -1313,14 +1323,28 @@ const DashboardController = {
 
 // Initialize dashboard when document is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Add Chart.js script dynamically
-    const chartScript = document.createElement('script');
-    chartScript.src = 'https://cdn.jsdelivr.net/npm/chart.js';
-    chartScript.onload = () => {
-        console.log('Chart.js loaded');
+    // Check if Chart.js is already loaded
+    if (typeof Chart !== 'undefined') {
+        console.log('Chart.js already loaded');
         DashboardController.init();
-    };
-    document.head.appendChild(chartScript);
+    } else {
+        // Add Chart.js script dynamically
+        const chartScript = document.createElement('script');
+        chartScript.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js';
+        chartScript.onload = () => {
+            console.log('Chart.js loaded successfully');
+            // Wait a bit for Chart.js to initialize
+            setTimeout(() => {
+                DashboardController.init();
+            }, 100);
+        };
+        chartScript.onerror = (error) => {
+            console.error('Failed to load Chart.js:', error);
+            // Initialize without charts
+            DashboardController.init();
+        };
+        document.head.appendChild(chartScript);
+    }
     
     // Expose dashboard controller globally
     window.Dashboard = DashboardController;

@@ -55,17 +55,14 @@ const AppState = {
  */
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize UI components
-    UI.initTheme();
-    UI.initRipple();
-    UI.initNavigation();
-    UI.initBottomNav();
-    UI.initModals();
-    UI.initFab();
-    UI.initSwitches();
-    UI.initSliders();
+    if (typeof UI !== 'undefined') {
+        UI.init(); // Use the main init function
+    }
     
     // Initialize Dashboard
-    Dashboard.init();
+    if (typeof Dashboard !== 'undefined') {
+        Dashboard.init();
+    }
     
     // Initialize WebUIX API connection
     initWebUIX();
@@ -83,7 +80,9 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshData();
     
     // Show toast to indicate app is ready
-    UI.showToast('Application initialized');
+    if (typeof UI !== 'undefined' && UI.showNotification) {
+        UI.showNotification('Application initialized', 'info');
+    }
     
     console.log('KernelSU Anti-Bootloop Backup WebUI initialized');
 });
@@ -2039,3 +2038,319 @@ function formatSize(bytes) {
     
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
+
+/**
+ * Update system info in UI
+ */
+function updateSystemInfo() {
+    const { systemInfo } = AppState;
+    
+    // Update system overview
+    const deviceModel = document.getElementById('device-model');
+    const androidVersion = document.getElementById('android-version');
+    const kernelsuVersion = document.getElementById('kernelsu-version');
+    const moduleVersion = document.getElementById('module-version');
+    
+    if (deviceModel) deviceModel.textContent = systemInfo.deviceModel || 'Unknown';
+    if (androidVersion) androidVersion.textContent = systemInfo.androidVersion || 'Unknown';
+    if (kernelsuVersion) kernelsuVersion.textContent = systemInfo.kernelSUVersion || 'Unknown';
+    if (moduleVersion) moduleVersion.textContent = systemInfo.moduleVersion || 'v1.0.0';
+}
+
+/**
+ * Parse size string to bytes for comparison
+ * @param {string} sizeStr - Size string (e.g., "1.2G")
+ * @returns {number} Size in bytes
+ */
+function parseSize(sizeStr) {
+    const units = { 'B': 1, 'KB': 1024, 'MB': 1024**2, 'GB': 1024**3, 'TB': 1024**4 };
+    const match = sizeStr.match(/([\d.]+)\s*(\w+)/);
+    if (!match) return 0;
+    const [, value, unit] = match;
+    return parseFloat(value) * (units[unit] || 1);
+}
+
+/**
+ * Show offline details dialog
+ */
+function showOfflineDetails() {
+    const content = `
+        <div class="offline-details">
+            <p>The application is currently running in offline mode. Some features may be limited:</p>
+            <ul>
+                <li>Live system monitoring is disabled</li>
+                <li>Backup operations use cached data</li>
+                <li>Settings changes are stored locally</li>
+                <li>Real-time notifications are not available</li>
+            </ul>
+            <p>To restore full functionality, ensure:</p>
+            <ul>
+                <li>WebUIX API is available</li>
+                <li>KernelSU module is properly installed</li>
+                <li>Network connectivity is stable</li>
+            </ul>
+        </div>
+    `;
+    
+    UI.showModal('Offline Mode Details', content);
+}
+
+/**
+ * Show activity log in a modal
+ */
+function showActivityLog() {
+    let content = '<div class="activity-log-modal">';
+    
+    if (AppState.activityLog.length === 0) {
+        content += '<p class="placeholder-text">No activity to display</p>';
+    } else {
+        content += '<div class="activity-list">';
+        
+        AppState.activityLog.forEach(activity => {
+            const typeIcon = {
+                'backup': 'backup',
+                'restore': 'restore',
+                'safety': 'security',
+                'error': 'error',
+                'warning': 'warning'
+            }[activity.type] || 'info';
+            
+            content += `
+                <div class="activity-item ${activity.type}">
+                    <div class="activity-icon">
+                        <i class="material-icons">${typeIcon}</i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-message">${activity.message}</div>
+                        <div class="activity-time">${activity.date.toLocaleString()}</div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        content += '</div>';
+    }
+    
+    content += '</div>';
+    
+    UI.showModal('Activity Log', content);
+}
+
+/**
+ * Test bootloop protection
+ */
+function testProtection() {
+    UI.showConfirmDialog(
+        'Test Bootloop Protection',
+        'This will test the bootloop protection system by simulating a boot failure. Are you sure you want to continue?',
+        'Test',
+        'Cancel',
+        async () => {
+            UI.showLoader('Testing bootloop protection...');
+            
+            try {
+                if (AppState.isWebUIXConnected) {
+                    const result = await executeCommand('sh /data/adb/modules/kernelsu_antibootloop_backup/scripts/test-protection.sh');
+                    
+                    if (result && result.includes('Test completed successfully')) {
+                        UI.showToast('Bootloop protection test completed successfully');
+                        logActivity('safety', 'Bootloop protection test completed');
+                    } else {
+                        UI.showToast('Bootloop protection test failed', 'error');
+                    }
+                } else {
+                    setTimeout(() => {
+                        UI.showToast('Bootloop protection test completed (mock mode)');
+                        logActivity('safety', 'Bootloop protection test completed (mock)');
+                    }, 2000);
+                }
+            } catch (error) {
+                UI.showToast('Failed to test bootloop protection', 'error');
+                console.error('Test protection error:', error);
+            } finally {
+                UI.hideLoader();
+            }
+        }
+    );
+}
+
+/**
+ * Create recovery point
+ * @param {string} description - Recovery point description
+ */
+function createRecoveryPoint(description = 'Manual recovery point') {
+    return new Promise(async (resolve, reject) => {
+        try {
+            UI.showLoader('Creating recovery point...');
+            
+            if (AppState.isWebUIXConnected) {
+                const name = `recovery_point_${Date.now()}.point`;
+                const command = `sh /data/adb/modules/kernelsu_antibootloop_backup/scripts/recovery-point.sh create "${name}" "${description}"`;
+                
+                const result = await executeCommand(command);
+                
+                if (result && result.includes('Recovery point created')) {
+                    UI.showToast('Recovery point created successfully');
+                    logActivity('safety', `Created recovery point: ${description}`);
+                    
+                    // Add to recovery points array
+                    AppState.recoveryPoints.push({
+                        name,
+                        path: `/data/adb/modules/kernelsu_antibootloop_backup/config/recovery_points/${name}`,
+                        date: new Date(),
+                        description
+                    });
+                    
+                    updateRecoveryPointList();
+                    resolve(true);
+                } else {
+                    UI.showToast('Failed to create recovery point', 'error');
+                    reject(new Error('Recovery point creation failed'));
+                }
+            } else {
+                // Mock mode
+                setTimeout(() => {
+                    UI.showToast('Recovery point created successfully (mock mode)');
+                    logActivity('safety', `Created recovery point: ${description} (mock)`);
+                    
+                    const name = `recovery_point_${Date.now()}.point`;
+                    AppState.recoveryPoints.push({
+                        name,
+                        path: `/mock/path/${name}`,
+                        date: new Date(),
+                        description
+                    });
+                    
+                    updateRecoveryPointList();
+                    resolve(true);
+                }, 1500);
+            }
+        } catch (error) {
+            UI.showToast('Failed to create recovery point', 'error');
+            console.error('Create recovery point error:', error);
+            reject(error);
+        } finally {
+            UI.hideLoader();
+        }
+    });
+}
+
+/**
+ * Show reboot dialog
+ * @param {string} message - Reboot message
+ */
+function showRebootDialog(message) {
+    UI.showConfirmDialog(
+        'Reboot Required',
+        message,
+        'Reboot Now',
+        'Later',
+        async () => {
+            UI.showLoader('Rebooting device...');
+            
+            if (AppState.isWebUIXConnected) {
+                try {
+                    await executeCommand('reboot');
+                } catch (error) {
+                    console.error('Reboot command error:', error);
+                }
+            } else {
+                setTimeout(() => {
+                    UI.hideLoader();
+                    UI.showToast('Reboot command sent (mock mode)');
+                }, 2000);
+            }
+        }
+    );
+}
+
+/**
+ * Show logs dialog
+ */
+function showLogs() {
+    UI.showLoader('Loading logs...');
+    
+    const loadLogs = async () => {
+        if (!AppState.isWebUIXConnected) {
+            return 'Mock log content\n[INFO] Module started\n[INFO] Bootloop protection enabled\n[INFO] Backup system ready';
+        }
+        
+        try {
+            const logPath = '/data/adb/modules/kernelsu_antibootloop_backup/logs/module.log';
+            return await executeCommand(`tail -100 ${logPath}`);
+        } catch (error) {
+            return 'Error loading logs: ' + error.message;
+        }
+    };
+    
+    loadLogs().then(logContent => {
+        UI.hideLoader();
+        
+        const content = `
+            <div class="logs-viewer">
+                <div class="logs-toolbar">
+                    <button class="btn small" onclick="downloadLogs()">Download</button>
+                    <button class="btn small" onclick="clearLogs()">Clear</button>
+                    <button class="btn small" onclick="refreshLogs()">Refresh</button>
+                </div>
+                <pre class="logs-content">${logContent}</pre>
+            </div>
+        `;
+        
+        UI.showModal('System Logs', content);
+    });
+}
+
+/**
+ * Show about dialog
+ */
+function showAboutDialog() {
+    const content = `
+        <div class="about-dialog">
+            <div class="app-info">
+                <h3>KernelSU Anti-Bootloop & Backup</h3>
+                <p>Version: ${APP_CONFIG.version}</p>
+                <p>Author: Wiktor/overspend1</p>
+                <p>Built: ${new Date().getFullYear()}</p>
+            </div>
+            
+            <div class="description">
+                <p>Advanced KernelSU module that combines anti-bootloop protection with comprehensive backup and restoration capabilities.</p>
+            </div>
+            
+            <div class="features">
+                <h4>Features:</h4>
+                <ul>
+                    <li>Bootloop protection and recovery</li>
+                    <li>Comprehensive backup system</li>
+                    <li>WebUIX-compliant interface</li>
+                    <li>Encrypted backups</li>
+                    <li>Multi-stage recovery mechanisms</li>
+                    <li>Real-time system monitoring</li>
+                </ul>
+            </div>
+            
+            <div class="system-info">
+                <h4>System Information:</h4>
+                <p>Device: ${AppState.systemInfo.deviceModel}</p>
+                <p>Android: ${AppState.systemInfo.androidVersion}</p>
+                <p>KernelSU: ${AppState.systemInfo.kernelSUVersion}</p>
+                <p>Kernel: ${AppState.systemInfo.kernelVersion}</p>
+            </div>
+        </div>
+    `;
+    
+    UI.showModal('About', content);
+}
+
+// Expose functions globally
+window.updateSystemInfo = updateSystemInfo;
+window.showOfflineDetails = showOfflineDetails;
+window.showActivityLog = showActivityLog;
+window.testProtection = testProtection;
+window.createRecoveryPoint = createRecoveryPoint;
+window.showRebootDialog = showRebootDialog;
+window.showLogs = showLogs;
+window.showAboutDialog = showAboutDialog;
+window.parseSize = parseSize;
+window.AppState = AppState;

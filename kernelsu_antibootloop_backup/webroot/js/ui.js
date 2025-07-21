@@ -118,6 +118,10 @@ const UIController = {
     /**
      * Initialize Material Design ripple effect
      */
+    initRipple: function() {
+        return this.initRippleEffect();
+    },
+
     initRippleEffect: function() {
         // Add ripple effect to buttons
         document.querySelectorAll('.btn, .icon-button, .nav-item, .bottom-nav-item').forEach(button => {

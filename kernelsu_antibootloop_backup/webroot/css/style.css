@@ -1120,6 +1120,149 @@ body {
   animation: spin var(--md-sys-motion-duration-extra-long1) linear infinite;
 }
 
+/* Bottom Navigation */
+.bottom-navigation {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--md-sys-color-surface-container);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  display: flex;
+  z-index: var(--z-fab);
+  box-shadow: var(--md-sys-elevation-level2);
+}
+
+.bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  min-height: 64px;
+  cursor: pointer;
+  color: var(--md-sys-color-on-surface-variant);
+  transition: color var(--md-sys-motion-duration-short2) var(--md-sys-motion-easing-standard);
+  position: relative;
+  overflow: hidden;
+}
+
+.bottom-nav-item.active {
+  color: var(--md-sys-color-primary);
+}
+
+.bottom-nav-item span {
+  font-size: var(--md-sys-typescale-label-small-font-size);
+  margin-top: 4px;
+}
+
+.bottom-nav-item i {
+  font-size: 24px;
+}
+
+/* Chart Placeholder */
+.chart-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: var(--md-sys-shape-corner-medium);
+  color: var(--md-sys-color-on-surface-variant);
+  text-align: center;
+  gap: 16px;
+}
+
+/* Activity Styles */
+.activity-log {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--md-sys-shape-corner-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  flex-shrink: 0;
+}
+
+.activity-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.activity-title {
+  font-weight: var(--md-sys-typescale-body-medium-font-weight);
+  color: var(--md-sys-color-on-surface);
+}
+
+.activity-time {
+  font-size: var(--md-sys-typescale-body-small-font-size);
+  color: var(--md-sys-color-on-surface-variant);
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.activity-description {
+  margin: 0;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: var(--md-sys-typescale-body-small-font-size);
+}
+
+/* Ripple Effect */
+.ripple-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+  transform: scale(0);
+  animation: ripple-animation 0.6s ease-out;
+}
+
+@keyframes ripple-animation {
+  to {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
 /* Utilities */
 .hidden { display: none !important; }
 .visible { display: block !important; }
