@@ -9,6 +9,149 @@
  * Implements WebUIX API standards for kernel-level operations
  */
 const ModuleAPI = {
+    // Performance monitoring
+    performanceMetrics: {
+        commandCount: 0,
+        totalExecutionTime: 0,
+        averageExecutionTime: 0,
+        errorCount: 0,
+        cacheHitCount: 0,
+        startTime: Date.now()
+    },
+    
+    // Command result cache
+    commandCache: new Map(),
+    cacheTimeout: 30000, // 30 seconds
+    
+    // Rate limiting
+    rateLimiter: {
+        commandQueue: [],
+        isProcessing: false,
+        maxConcurrent: 5,
+        activeCommands: 0
+    },
+    
+    /**
+     * Check and use command cache
+     * @private
+     * @param {string} cacheKey - Cache key
+     * @param {Function} commandFn - Function to execute if cache miss
+     * @returns {Promise<any>} Cached or fresh result
+     */
+    _withCache: async function(cacheKey, commandFn) {
+        // Check cache first
+        const cachedItem = this.commandCache.get(cacheKey);
+        if (cachedItem && (Date.now() - cachedItem.timestamp < this.cacheTimeout)) {
+            this.performanceMetrics.cacheHitCount++;
+            console.log(`Cache hit for: ${cacheKey}`);
+            return cachedItem.result;
+        }
+        
+        // Execute command and cache result
+        const result = await commandFn();
+        this.commandCache.set(cacheKey, {
+            result,
+            timestamp: Date.now()
+        });
+        
+        // Clean up old cache entries periodically
+        if (this.commandCache.size > 100) {
+            this._cleanupCache();
+        }
+        
+        return result;
+    },
+    
+    /**
+     * Clean up expired cache entries
+     * @private
+     */
+    _cleanupCache: function() {
+        const now = Date.now();
+        for (const [key, value] of this.commandCache.entries()) {
+            if (now - value.timestamp > this.cacheTimeout) {
+                this.commandCache.delete(key);
+            }
+        }
+    },
+    
+    /**
+     * Rate limit command execution
+     * @private
+     * @param {Function} commandFn - Command function to execute
+     * @returns {Promise<any>} Command result
+     */
+    _withRateLimit: async function(commandFn) {
+        return new Promise((resolve, reject) => {
+            this.rateLimiter.commandQueue.push({ commandFn, resolve, reject });
+            this._processCommandQueue();
+        });
+    },
+    
+    /**
+     * Process command queue with rate limiting
+     * @private
+     */
+    _processCommandQueue: async function() {
+        if (this.rateLimiter.isProcessing || 
+            this.rateLimiter.activeCommands >= this.rateLimiter.maxConcurrent ||
+            this.rateLimiter.commandQueue.length === 0) {
+            return;
+        }
+        
+        this.rateLimiter.isProcessing = true;
+        
+        while (this.rateLimiter.commandQueue.length > 0 && 
+               this.rateLimiter.activeCommands < this.rateLimiter.maxConcurrent) {
+            
+            const { commandFn, resolve, reject } = this.rateLimiter.commandQueue.shift();
+            this.rateLimiter.activeCommands++;
+            
+            commandFn()
+                .then(resolve)
+                .catch(reject)
+                .finally(() => {
+                    this.rateLimiter.activeCommands--;
+                    // Process next command
+                    setTimeout(() => this._processCommandQueue(), 10);
+                });
+        }
+        
+        this.rateLimiter.isProcessing = false;
+    },
+    
+    /**
+     * Update performance metrics
+     * @private
+     * @param {number} executionTime - Command execution time in ms
+     * @param {boolean} isError - Whether the command resulted in error
+     */
+    _updateMetrics: function(executionTime, isError = false) {
+        this.performanceMetrics.commandCount++;
+        this.performanceMetrics.totalExecutionTime += executionTime;
+        this.performanceMetrics.averageExecutionTime = 
+            this.performanceMetrics.totalExecutionTime / this.performanceMetrics.commandCount;
+        
+        if (isError) {
+            this.performanceMetrics.errorCount++;
+        }
+    },
+    
+    /**
+     * Get performance metrics
+     * @returns {Object} Performance metrics
+     */
+    getPerformanceMetrics: function() {
+        const uptime = Date.now() - this.performanceMetrics.startTime;
+        return {
+            ...this.performanceMetrics,
+            uptime,
+            errorRate: this.performanceMetrics.errorCount / Math.max(1, this.performanceMetrics.commandCount),
+            cacheHitRate: this.performanceMetrics.cacheHitCount / Math.max(1, this.performanceMetrics.commandCount),
+            commandsPerSecond: (this.performanceMetrics.commandCount / uptime) * 1000
+        };
+    },
+    
     /**
      * Initialize API and load system information
      * @returns {Promise<boolean>} Success status
@@ -36,20 +179,106 @@ const ModuleAPI = {
     /**
      * Execute shell command synchronously using KernelSU Next API
      * @param {string} cmd - Shell command to execute
+     * @param {Object} options - Execution options (timeout, retries)
      * @returns {Promise<string>} Command output
      */
-    execCommand: async function(cmd) {
+    execCommand: async function(cmd, options = {}) {
+        const { 
+            timeout = 30000, 
+            retries = 3, 
+            silent = false, 
+            cache = false, 
+            cacheKey = null,
+            rateLimit = true 
+        } = options;
+        
+        const startTime = Date.now();
+        const finalCacheKey = cacheKey || `exec_${cmd}`;
+        
         try {
-            if (typeof ksu !== 'undefined' && ksu.exec) {
-                const result = ksu.exec(cmd);
-                return result;
-            } else {
-                throw new Error('KernelSU API not available');
+            // Use cache if enabled
+            if (cache) {
+                return await this._withCache(finalCacheKey, async () => {
+                    return await this._executeCommandWithRateLimit(cmd, { timeout, retries, silent, rateLimit });
+                });
             }
+            
+            // Execute directly or with rate limiting
+            return await this._executeCommandWithRateLimit(cmd, { timeout, retries, silent, rateLimit });
         } catch (error) {
-            console.error('Command execution failed:', error);
+            this._updateMetrics(Date.now() - startTime, true);
             throw error;
+        } finally {
+            this._updateMetrics(Date.now() - startTime, false);
         }
+    },
+    
+    /**
+     * Internal command execution with rate limiting
+     * @private
+     */
+    _executeCommandWithRateLimit: async function(cmd, options) {
+        const { timeout, retries, silent, rateLimit } = options;
+        
+        const executeCommand = async () => {
+            return await this._executeCommandInternal(cmd, { timeout, retries, silent });
+        };
+        
+        if (rateLimit) {
+            return await this._withRateLimit(executeCommand);
+        }
+        
+        return await executeCommand();
+    },
+    
+    /**
+     * Core command execution logic
+     * @private
+     */
+    _executeCommandInternal: async function(cmd, options) {
+        const { timeout, retries, silent } = options;
+        let lastError;
+        
+        for (let attempt = 1; attempt <= retries; attempt++) {
+            try {
+                if (typeof ksu !== 'undefined' && ksu.exec) {
+                    // Set timeout for command execution
+                    const timeoutPromise = new Promise((_, reject) => {
+                        setTimeout(() => reject(new Error('Command timeout')), timeout);
+                    });
+                    
+                    const commandPromise = Promise.resolve(ksu.exec(cmd));
+                    
+                    const result = await Promise.race([commandPromise, timeoutPromise]);
+                    
+                    if (!silent) {
+                        console.log(`Command executed (attempt ${attempt}): ${cmd.substring(0, 50)}...`);
+                    }
+                    
+                    return result;
+                } else {
+                    throw new Error('KernelSU API not available');
+                }
+            } catch (error) {
+                lastError = error;
+                if (!silent) {
+                    console.warn(`Command execution failed (attempt ${attempt}/${retries}):`, error.message);
+                }
+                
+                // Don't retry on certain errors
+                if (error.message.includes('permission denied') || 
+                    error.message.includes('not found') ||
+                    attempt === retries) {
+                    break;
+                }
+                
+                // Wait before retry with exponential backoff
+                await new Promise(resolve => setTimeout(resolve, Math.min(10000, 1000 * Math.pow(2, attempt - 1))));
+            }
+        }
+        
+        console.error('All command execution attempts failed:', lastError);
+        throw lastError;
     },
     
     /**
@@ -267,44 +496,86 @@ const ModuleAPI = {
      * @returns {Promise<Object>} System status
      */
     getSystemStatus: async function() {
-        try {
-            // Get device properties
-            const buildProp = await this.execCommand('getprop');
-            
-            // Parse relevant properties
-            const deviceModel = this._parseProperty(buildProp, 'ro.product.model');
-            const androidVersion = this._parseProperty(buildProp, 'ro.build.version.release');
-            
-            // Get KernelSU version
-            const ksuVersion = await this.execCommand('su -v');
-            
-            // Get boot information
-            const bootInfoCmd = 'cat /data/adb/modules/kernelsu_antibootloop_backup/config/boot_info.json';
-            const bootInfoJson = await this.execCommand(bootInfoCmd);
-            const bootInfo = JSON.parse(bootInfoJson || '{"bootCount":0,"lastBoot":"None"}');
-            
-            return {
-                deviceModel,
-                androidVersion,
-                kernelsuVersion: ksuVersion.trim(),
-                moduleVersion: this.moduleInfo?.version || 'v1.0.0',
-                lastBoot: bootInfo.lastBoot,
-                bootCount: bootInfo.bootCount,
-                bootloopProtectionEnabled: true
-            };
-        } catch (error) {
-            console.error('Failed to get system status:', error);
-            // Return default values on error
-            return {
-                deviceModel: 'Unknown',
-                androidVersion: 'Unknown',
-                kernelsuVersion: 'Unknown',
-                moduleVersion: 'v1.0.0',
-                lastBoot: 'Unknown',
-                bootCount: 0,
-                bootloopProtectionEnabled: true
-            };
-        }
+        return await this._withCache('system_status', async () => {
+            try {
+                // Get device properties with cache
+                const buildProp = await this.execCommand('getprop', { 
+                    cache: true, 
+                    cacheKey: 'device_properties' 
+                });
+                
+                // Parse relevant properties
+                const deviceModel = this._parseProperty(buildProp, 'ro.product.model');
+                const androidVersion = this._parseProperty(buildProp, 'ro.build.version.release');
+                const sdkVersion = this._parseProperty(buildProp, 'ro.build.version.sdk');
+                const buildDate = this._parseProperty(buildProp, 'ro.build.date');
+                const manufacturer = this._parseProperty(buildProp, 'ro.product.manufacturer');
+                
+                // Get KernelSU version
+                const ksuVersion = await this.execCommand('su -v', { 
+                    cache: true, 
+                    cacheKey: 'ksu_version' 
+                });
+                
+                // Get boot information
+                const bootInfoCmd = 'cat /data/adb/modules/kernelsu_antibootloop_backup/config/boot_info.json || echo "{}"';
+                const bootInfoJson = await this.execCommand(bootInfoCmd);
+                const bootInfo = JSON.parse(bootInfoJson || '{"bootCount":0,"lastBoot":"None"}');
+                
+                // Get memory info
+                const memInfo = await this.execCommand('cat /proc/meminfo | head -3', { 
+                    cache: true, 
+                    cacheKey: 'memory_info' 
+                });
+                const totalMem = this._parseMemInfo(memInfo, 'MemTotal');
+                const freeMem = this._parseMemInfo(memInfo, 'MemFree');
+                
+                // Get storage info
+                const storageInfo = await this.execCommand('df -h /data | tail -1', { 
+                    cache: true, 
+                    cacheKey: 'storage_info' 
+                });
+                const storage = this._parseStorageInfo(storageInfo);
+                
+                return {
+                    deviceModel,
+                    androidVersion,
+                    sdkVersion: parseInt(sdkVersion) || 0,
+                    manufacturer,
+                    buildDate,
+                    kernelsuVersion: ksuVersion.trim(),
+                    moduleVersion: this.moduleInfo?.version || 'v1.0.0',
+                    lastBoot: bootInfo.lastBoot,
+                    bootCount: bootInfo.bootCount,
+                    bootloopProtectionEnabled: true,
+                    memory: {
+                        total: totalMem,
+                        free: freeMem,
+                        used: totalMem - freeMem
+                    },
+                    storage,
+                    timestamp: Date.now()
+                };
+            } catch (error) {
+                console.error('Failed to get system status:', error);
+                // Return default values on error
+                return {
+                    deviceModel: 'Unknown',
+                    androidVersion: 'Unknown',
+                    sdkVersion: 0,
+                    manufacturer: 'Unknown',
+                    buildDate: 'Unknown',
+                    kernelsuVersion: 'Unknown',
+                    moduleVersion: 'v1.0.0',
+                    lastBoot: 'Unknown',
+                    bootCount: 0,
+                    bootloopProtectionEnabled: true,
+                    memory: { total: 0, free: 0, used: 0 },
+                    storage: { total: 0, used: 0, free: 0, percentage: 0 },
+                    timestamp: Date.now()
+                };
+            }
+        });
     },
     
     /**
@@ -613,6 +884,62 @@ const ModuleAPI = {
         const regex = new RegExp(`\\[${propertyName}\\]:\\s*\\[(.+?)\\]`);
         const match = propOutput.match(regex);
         return match ? match[1] : 'Unknown';
+    },
+    
+    /**
+     * Parse memory information from /proc/meminfo
+     * @private
+     * @param {string} memOutput - meminfo output
+     * @param {string} field - Field to extract (e.g., 'MemTotal', 'MemFree')
+     * @returns {number} Memory in MB
+     */
+    _parseMemInfo: function(memOutput, field) {
+        const regex = new RegExp(`${field}:\\s*(\\d+)\\s*kB`);
+        const match = memOutput.match(regex);
+        return match ? Math.round(parseInt(match[1]) / 1024) : 0; // Convert KB to MB
+    },
+    
+    /**
+     * Parse storage information from df output
+     * @private
+     * @param {string} dfOutput - df command output
+     * @returns {Object} Storage information
+     */
+    _parseStorageInfo: function(dfOutput) {
+        const parts = dfOutput.trim().split(/\s+/);
+        if (parts.length >= 6) {
+            const total = this._parseStorageSize(parts[1]);
+            const used = this._parseStorageSize(parts[2]);
+            const free = this._parseStorageSize(parts[3]);
+            const percentage = parseInt(parts[4].replace('%', ''));
+            
+            return { total, used, free, percentage };
+        }
+        return { total: 0, used: 0, free: 0, percentage: 0 };
+    },
+    
+    /**
+     * Parse storage size to MB
+     * @private
+     * @param {string} sizeStr - Size string (e.g., '1.5G', '512M')
+     * @returns {number} Size in MB
+     */
+    _parseStorageSize: function(sizeStr) {
+        if (!sizeStr) return 0;
+        
+        const match = sizeStr.match(/^([\d.]+)([KMGT]?)$/i);
+        if (!match) return 0;
+        
+        const value = parseFloat(match[1]);
+        const unit = match[2].toUpperCase();
+        
+        switch (unit) {
+            case 'T': return Math.round(value * 1024 * 1024);
+            case 'G': return Math.round(value * 1024);
+            case 'M': return Math.round(value);
+            case 'K': return Math.round(value / 1024);
+            default: return Math.round(value / (1024 * 1024)); // Assume bytes
+        }
     },
     
     /**
