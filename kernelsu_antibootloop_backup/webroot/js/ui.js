@@ -78,6 +78,9 @@ const UIController = {
         
         // Initialize WebUIX integration
         this.initWebUIXIntegration();
+        
+        // Initialize navigation
+        this.initNavigation();
     },
     
     /**
@@ -116,6 +119,35 @@ const UIController = {
     },
     
     /**
+     * Initialize navigation event listeners
+     */
+    initNavigation: function() {
+        // Add click event listeners to navigation tabs
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                e.preventDefault();
+                const pageId = tab.getAttribute('data-page');
+                if (pageId) {
+                    this.navigateTo(pageId);
+                }
+            });
+        });
+        
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', (e) => {
+            if (e.state && e.state.page) {
+                this.navigateTo(e.state.page, true);
+            }
+        });
+        
+        // Set initial page from URL hash
+        const hash = window.location.hash.substring(1);
+        if (hash && document.getElementById(hash)) {
+            this.navigateTo(hash, true);
+        }
+    },
+    
+    /**
      * Initialize Material Design ripple effect
      */
     initRipple: function() {
@@ -124,7 +156,7 @@ const UIController = {
 
     initRippleEffect: function() {
         // Add ripple effect to buttons
-        document.querySelectorAll('.btn, .icon-button, .nav-item, .bottom-nav-item').forEach(button => {
+        document.querySelectorAll('.md-button, .nav-tab, .bottom-nav-item, .md-fab').forEach(button => {
             // Skip if already initialized
             if (button.classList.contains('ripple-initialized')) return;
             
@@ -383,13 +415,12 @@ const UIController = {
         }
         
         // Update main navigation
-        const mainNav = document.querySelector('.main-nav');
-        if (mainNav) {
-            const navLinks = mainNav.querySelectorAll('a');
-            navLinks.forEach(link => {
-                link.classList.toggle('active', link.getAttribute('data-page') === pageId);
-            });
-        }
+        const navTabs = document.querySelectorAll('.nav-tab');
+        navTabs.forEach(tab => {
+            const isActive = tab.getAttribute('data-page') === pageId;
+            tab.classList.toggle('active', isActive);
+            tab.setAttribute('aria-selected', isActive);
+        });
     },
     
     /**
@@ -465,7 +496,7 @@ const UIController = {
         });
         
         // Add click event listeners to expandable cards
-        document.querySelectorAll('.card.expandable').forEach(card => {
+        document.querySelectorAll('.md-card.expandable').forEach(card => {
             const header = card.querySelector('.card-header');
             if (header) {
                 header.addEventListener('click', () => {
@@ -947,8 +978,8 @@ const UIController = {
      */
     showModal: function(title, content, confirmCallback) {
         const modal = document.getElementById('modal-container');
-        const modalTitle = document.querySelector('.modal-title');
-        const modalBody = document.querySelector('.modal-body');
+        const modalTitle = document.querySelector('.md-dialog-title');
+        const modalBody = document.querySelector('.md-dialog-body');
         const modalConfirm = document.getElementById('modal-confirm');
         
         if (!modal || !modalTitle || !modalBody) {
