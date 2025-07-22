@@ -104,16 +104,16 @@ jobs:
         
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
-       with:
-         tag_name: ${{ steps.version.outputs.version }}
-         release_name: "KernelSU Anti-Bootloop & Backup ${{ steps.version.outputs.version }}"
-         body_path: ./CHANGELOG.md
-         files: ${{ env.ZIP_FILE }}
-         draft: false
-         prerelease: ${{ contains(steps.version.outputs.version, '-') }}
-         make_latest: true
-       env:
-         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.version.outputs.version }}
+        release_name: "KernelSU Anti-Bootloop & Backup ${{ steps.version.outputs.version }}"
+        body_path: ./CHANGELOG.md
+        files: ${{ env.ZIP_FILE }}
+        draft: false
+        prerelease: ${{ contains(steps.version.outputs.version, '-') }}
+        make_latest: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
     - name: Update MMRL repository
       run: |
