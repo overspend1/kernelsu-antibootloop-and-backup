@@ -3,386 +3,234 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KernelSU Control Center</title>
-    <meta name="description" content="Advanced KernelSU Anti-Bootloop & Backup Management System">
-    <meta name="theme-color" content="#6366f1">
-    
-    <!-- Preload critical resources -->
-    <link rel="preload" href="css/style.css" as="style">
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
-    
-    <!-- Stylesheets -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-    
-    <!-- Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236366f1;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%238b5cf6;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' fill='url(%23grad)'/%3E%3Ctext x='50' y='60' font-family='Arial' font-size='40' font-weight='bold' text-anchor='middle' fill='white'%3EK%3C/text%3E%3C/svg%3E">
+    <title>KernelSU Anti-Bootloop & Backup</title>
+    <meta name="description" content="Advanced system protection and backup management for KernelSU">
+    <meta name="keywords" content="KernelSU, backup, bootloop, protection, android, root">
+    <meta name="author" content="KernelSU Community">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0idXJsKCNncmFkaWVudDApIi8+CjxwYXRoIGQ9Ik0xNiA4QzEyLjY4NjMgOCAxMCAxMC42ODYzIDEwIDE0VjE4QzEwIDIxLjMxMzcgMTIuNjg2MyAyNCAxNiAyNEMxOS4zMTM3IDI0IDIyIDIxLjMxMzcgMjIgMThWMTRDMjIgMTAuNjg2MyAxOS4zMTM3IDggMTYgOFoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0xNiAxMkMxNC44OTU0IDEyIDE0IDEyLjg5NTQgMTQgMTRWMThDMTQgMTkuMTA0NiAxNC44OTU0IDIwIDE2IDIwQzE3LjEwNDYgMjAgMTggMTkuMTA0NiAxOCAxOFYxNEMxOCAxMi44OTU0IDE3LjEwNDYgMTIgMTYgMTJaIiBmaWxsPSIjNjY3ZWVhIi8+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9ImdyYWRpZW50MCIgeDE9IjAiIHkxPSIwIiB4Mj0iMzIiIHkyPSIzMiIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPgo8c3RvcCBzdG9wLWNvbG9yPSIjNjY3ZWVhIi8+CjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzc2NGJhMiIvPgo8L2xpbmVhckdyYWRpZW50Pgo8L2RlZnM+Cjwvc3ZnPgo=">
 </head>
 <body>
-    <!-- Skip to main content for accessibility -->
-    <a href="#main-content" class="skip-link">Skip to main content</a>
-    
-    <div class="app">
-        <!-- Background Elements -->
-        <div class="bg-gradient"></div>
-        <div class="bg-grid"></div>
-        <div class="floating-orbs">
-            <div class="orb orb-1"></div>
-            <div class="orb orb-2"></div>
-            <div class="orb orb-3"></div>
+    <div class="container">
+        <div class="header">
+            <h1>KernelSU Anti-Bootloop & Backup</h1>
+            <p>Advanced system protection and backup management</p>
         </div>
-        
-        <!-- Header -->
-        <header class="header" role="banner">
-            <div class="header-content">
-                <div class="logo-section">
-                    <div class="logo">
-                        <svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
-                                    <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
-                                </linearGradient>
-                            </defs>
-                            <circle cx="50" cy="50" r="45" fill="url(#logoGrad)"/>
-                            <text x="50" y="65" font-family="Inter, Arial" font-size="35" font-weight="bold" text-anchor="middle" fill="white">K</text>
-                        </svg>
-                    </div>
-                    <div class="logo-text">
-                        <h1>KernelSU Control</h1>
-                        <span>Anti-Bootloop & Backup System</span>
-                    </div>
-                </div>
-                
-                <div class="header-actions">
-                    <button class="action-btn" aria-label="Notifications" title="Notifications">
-                        <i class="fas fa-bell" aria-hidden="true"></i>
-                        <div class="notification-dot" aria-hidden="true"></div>
-                    </button>
-                    <button class="action-btn" aria-label="Settings" title="Settings">
-                        <i class="fas fa-cog" aria-hidden="true"></i>
-                    </button>
-                    <button class="action-btn" aria-label="Help" title="Help">
-                        <i class="fas fa-question-circle" aria-hidden="true"></i>
-                    </button>
-                </div>
-            </div>
-        </header>
-        
-        <!-- Navigation -->
-        <nav class="navigation" role="navigation" aria-label="Main navigation">
-            <div class="nav-content">
-                <button class="nav-item active" data-page="dashboard" aria-current="page">
-                    <i class="fas fa-tachometer-alt" aria-hidden="true"></i>
-                    <span>Dashboard</span>
-                </button>
-                <button class="nav-item" data-page="backup">
-                    <i class="fas fa-shield-alt" aria-hidden="true"></i>
-                    <span>Backup</span>
-                </button>
-                <button class="nav-item" data-page="restore">
-                    <i class="fas fa-undo" aria-hidden="true"></i>
-                    <span>Restore</span>
-                </button>
 
-                <button class="nav-item" data-page="logs">
-                    <i class="fas fa-file-alt" aria-hidden="true"></i>
-                    <span>Logs</span>
-                </button>
-                <button class="nav-item" data-page="settings">
-                    <i class="fas fa-sliders-h" aria-hidden="true"></i>
-                    <span>Settings</span>
-                </button>
+        <div class="status-grid">
+            <div class="status-card">
+                <h3>System Protection</h3>
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span class="status-text" id="protection-status">Active & Monitoring</span>
+                </div>
+                <p>Anti-bootloop protection is actively monitoring your system for potential issues.</p>
             </div>
-        </nav>
-        
-        <!-- Main Content -->
-        <main class="main-content" id="main-content" role="main">
-            <!-- Dashboard Page -->
-            <div class="page active" id="dashboard">
-                <div class="page-header">
-                    <h2>System Dashboard</h2>
-                    <p>Monitor your KernelSU system status and manage critical operations</p>
-                </div>
-                
-                <!-- Status Grid -->
-                <div class="status-grid">
-                    <div class="status-card">
-                        <div class="card-icon">
-                            <i class="fas fa-shield-check" aria-hidden="true"></i>
-                        </div>
-                        <div class="card-content">
-                            <h3>System Protection</h3>
-                            <div class="status-indicator active">
-                                <div class="status-dot"></div>
-                                <span>Active & Monitoring</span>
-                            </div>
-                            <p>Anti-bootloop protection is actively monitoring your system for potential issues.</p>
-                        </div>
-                    </div>
-                    
-                    <div class="status-card">
-                        <div class="card-icon">
-                            <i class="fas fa-database" aria-hidden="true"></i>
-                        </div>
-                        <div class="card-content">
-                            <h3>Latest Backup</h3>
-                            <div class="backup-info">
-                                <span class="backup-time">2 hours ago</span>
-                                <span class="backup-size">2.4 GB</span>
-                            </div>
-                            <p>System backup completed successfully with all critical partitions secured.</p>
-                        </div>
-                    </div>
-                    
-                    <div class="status-card">
-                        <div class="card-icon">
-                            <i class="fas fa-heartbeat" aria-hidden="true"></i>
-                        </div>
-                        <div class="card-content">
-                            <h3>System Health</h3>
-                            <div class="health-score">
-                                <span class="score">98</span>
-                                <span class="score-label">/ 100</span>
-                            </div>
-                            <p>Excellent system health with optimal performance metrics.</p>
-                        </div>
-                    </div>
-                    
-                    <div class="status-card">
-                        <div class="card-icon">
-                            <i class="fas fa-hdd" aria-hidden="true"></i>
-                        </div>
-                        <div class="card-content">
-                            <h3>Storage Usage</h3>
-                            <div class="storage-bar">
-                                <div class="storage-fill" style="width: 65%"></div>
-                            </div>
-                            <p>65% of backup storage used (6.5 GB of 10 GB available)</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Quick Actions -->
-                <section class="quick-actions">
-                    <h3>Quick Actions</h3>
-                    <div class="actions-grid">
-                        <a href="#" class="action-card" data-action="backup">
-                            <i class="fas fa-plus-circle" aria-hidden="true"></i>
-                            <span>Create Backup</span>
-                        </a>
-                        <a href="#" class="action-card" data-action="scan">
-                            <i class="fas fa-search" aria-hidden="true"></i>
-                            <span>System Scan</span>
-                        </a>
-                        <a href="#" class="action-card" data-action="optimize">
-                            <i class="fas fa-rocket" aria-hidden="true"></i>
-                            <span>Optimize</span>
-                        </a>
-                        <a href="#" class="action-card" data-action="emergency">
-                            <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
-                            <span>Emergency Mode</span>
-                        </a>
-                    </div>
-                </section>
-                
-                <!-- Recent Activity -->
-                <section class="recent-activity">
-                    <h3>Recent Activity</h3>
-                    <div class="activity-list">
-                        <div class="activity-item">
-                            <div class="activity-icon success">
-                                <i class="fas fa-check" aria-hidden="true"></i>
-                            </div>
-                            <div class="activity-content">
-                                <h4>Backup Completed</h4>
-                                <p>Full system backup created successfully</p>
-                                <span class="activity-time">2 hours ago</span>
-                            </div>
-                        </div>
-                        
-                        <div class="activity-item">
-                            <div class="activity-icon info">
-                                <i class="fas fa-info" aria-hidden="true"></i>
-                            </div>
-                            <div class="activity-content">
-                                <h4>System Scan</h4>
-                                <p>Routine system health check completed</p>
-                                <span class="activity-time">4 hours ago</span>
-                            </div>
-                        </div>
-                        
-                        <div class="activity-item">
-                            <div class="activity-icon warning">
-                                <i class="fas fa-exclamation" aria-hidden="true"></i>
-                            </div>
-                            <div class="activity-content">
-                                <h4>Module Update</h4>
-                                <p>KernelSU module updated to latest version</p>
-                                <span class="activity-time">1 day ago</span>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            </div>
-            
-            <!-- Backup Page -->
-            <div class="page" id="backup">
-                <div class="page-header">
-                    <h2>Backup Management</h2>
-                    <p>Create and manage system backups to protect against bootloops</p>
-                </div>
-                
-                <div class="coming-soon">
-                    <i class="fas fa-tools" aria-hidden="true"></i>
-                    <h3>Coming Soon</h3>
-                    <p>Advanced backup management features are currently in development.</p>
-                </div>
-            </div>
-            
-            <!-- Restore Page -->
-            <div class="page" id="restore">
-                <div class="page-header">
-                    <h2>System Restore</h2>
-                    <p>Restore your system from previous backups</p>
-                </div>
-                
-                <div class="coming-soon">
-                    <i class="fas fa-undo-alt" aria-hidden="true"></i>
-                    <h3>Coming Soon</h3>
-                    <p>System restore functionality will be available in the next update.</p>
-                </div>
-            </div>
-            
 
-            
-            <!-- Logs Page -->
-            <div class="page" id="logs">
-                <div class="page-header">
-                    <h2>System Logs</h2>
-                    <p>View detailed system logs and diagnostic information</p>
+            <div class="status-card">
+                <h3>Latest Backup</h3>
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span class="status-text" id="backup-status">Ready</span>
                 </div>
-                
-                <div class="logs-container">
-                    <div class="logs-controls">
-                        <select id="log-level-filter">
-                            <option value="all">All Levels</option>
-                            <option value="error">Errors</option>
-                            <option value="warning">Warnings</option>
-                            <option value="info">Info</option>
+                <p id="backup-info">System ready for backup operations.</p>
+            </div>
+
+            <div class="status-card">
+                <h3>System Health</h3>
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span class="status-text" id="health-status">Excellent</span>
+                </div>
+                <p id="health-info">System health monitoring active.</p>
+            </div>
+
+            <div class="status-card">
+                <h3>Storage Usage</h3>
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span class="status-text" id="storage-status">Available</span>
+                </div>
+                <p id="storage-info">Checking storage availability...</p>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs for Mobile -->
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('dashboard')">Dashboard</button>
+            <button class="nav-tab" onclick="switchTab('backup')">Backup</button>
+            <button class="nav-tab" onclick="switchTab('monitor')">Monitor</button>
+            <button class="nav-tab" onclick="switchTab('settings')">Settings</button>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div class="tab-content active" id="dashboard-tab">
+            <div class="actions-grid">
+                <button class="action-btn primary" onclick="createBackup()">
+                    <span class="btn-icon">💾</span>
+                    <span>Create Backup</span>
+                </button>
+                <button class="action-btn" onclick="listBackups()">
+                    <span class="btn-icon">📋</span>
+                    <span>List Backups</span>
+                </button>
+                <button class="action-btn" onclick="systemScan()">
+                    <span class="btn-icon">🔍</span>
+                    <span>System Scan</span>
+                </button>
+                <button class="action-btn" onclick="viewLogs()">
+                    <span class="btn-icon">📄</span>
+                    <span>View Logs</span>
+                </button>
+                <button class="action-btn" onclick="optimizeSystem()">
+                    <span class="btn-icon">⚡</span>
+                    <span>Optimize System</span>
+                </button>
+                <button class="action-btn danger" onclick="emergencyMode()">
+                    <span class="btn-icon">🚨</span>
+                    <span>Emergency Mode</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Backup Tab -->
+        <div class="tab-content" id="backup-tab">
+            <div class="backup-manager">
+                <div class="backup-controls">
+                    <button class="action-btn primary" onclick="createScheduledBackup()">
+                        <span class="btn-icon">⏰</span>
+                        <span>Schedule Backup</span>
+                    </button>
+                    <button class="action-btn" onclick="createIncrementalBackup()">
+                        <span class="btn-icon">📈</span>
+                        <span>Incremental Backup</span>
+                    </button>
+                    <button class="action-btn" onclick="exportBackup()">
+                        <span class="btn-icon">📤</span>
+                        <span>Export Backup</span>
+                    </button>
+                    <button class="action-btn" onclick="importBackup()">
+                        <span class="btn-icon">📥</span>
+                        <span>Import Backup</span>
+                    </button>
+                </div>
+                <div class="backup-list" id="backup-list">
+                    <h3>Available Backups</h3>
+                    <div class="backup-items" id="backup-items">
+                        <!-- Backup items will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitor Tab -->
+        <div class="tab-content" id="monitor-tab">
+            <div class="monitor-dashboard">
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <h4>CPU Usage</h4>
+                        <div class="metric-value" id="cpu-usage">--</div>
+                        <div class="metric-chart" id="cpu-chart"></div>
+                    </div>
+                    <div class="metric-card">
+                        <h4>Memory Usage</h4>
+                        <div class="metric-value" id="memory-usage">--</div>
+                        <div class="metric-chart" id="memory-chart"></div>
+                    </div>
+                    <div class="metric-card">
+                        <h4>Storage Usage</h4>
+                        <div class="metric-value" id="storage-usage">--</div>
+                        <div class="metric-chart" id="storage-chart"></div>
+                    </div>
+                    <div class="metric-card">
+                        <h4>Temperature</h4>
+                        <div class="metric-value" id="temperature">--</div>
+                        <div class="metric-chart" id="temp-chart"></div>
+                    </div>
+                </div>
+                <div class="real-time-controls">
+                    <button class="action-btn" onclick="toggleRealTimeMonitoring()" id="realtime-btn">
+                        <span class="btn-icon">▶️</span>
+                        <span>Start Real-time</span>
+                    </button>
+                    <button class="action-btn" onclick="exportMetrics()">
+                        <span class="btn-icon">📊</span>
+                        <span>Export Metrics</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div class="tab-content" id="settings-tab">
+            <div class="settings-panel">
+                <div class="settings-section">
+                    <h3>Backup Settings</h3>
+                    <div class="setting-item">
+                        <label for="auto-backup">Auto Backup</label>
+                        <input type="checkbox" id="auto-backup" onchange="updateSetting('autoBackup', this.checked)">
+                    </div>
+                    <div class="setting-item">
+                        <label for="backup-interval">Backup Interval (hours)</label>
+                        <input type="number" id="backup-interval" min="1" max="168" value="24" onchange="updateSetting('backupInterval', this.value)">
+                    </div>
+                    <div class="setting-item">
+                        <label for="max-backups">Max Backups to Keep</label>
+                        <input type="number" id="max-backups" min="1" max="50" value="10" onchange="updateSetting('maxBackups', this.value)">
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>Monitoring Settings</h3>
+                    <div class="setting-item">
+                        <label for="monitoring-enabled">Enable Monitoring</label>
+                        <input type="checkbox" id="monitoring-enabled" checked onchange="updateSetting('monitoringEnabled', this.checked)">
+                    </div>
+                    <div class="setting-item">
+                        <label for="alert-threshold">Alert Threshold (%)</label>
+                        <input type="number" id="alert-threshold" min="50" max="95" value="80" onchange="updateSetting('alertThreshold', this.value)">
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>UI Settings</h3>
+                    <div class="setting-item">
+                        <label for="theme-select">Theme</label>
+                        <select id="theme-select" onchange="updateSetting('theme', this.value)">
+                            <option value="auto">Auto</option>
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
                         </select>
-                        <button class="btn-secondary" onclick="app.clearLogs()">Clear Logs</button>
-                        <button class="btn-primary" onclick="app.refreshLogs()">Refresh</button>
                     </div>
-                    
-                    <div class="logs-viewer" id="logs-viewer">
-                        <div class="log-entry error">
-                            <span class="log-time">2024-01-15 14:30:25</span>
-                            <span class="log-level">ERROR</span>
-                            <span class="log-message">Failed to mount system partition</span>
-                        </div>
-                        <div class="log-entry warning">
-                            <span class="log-time">2024-01-15 14:29:15</span>
-                            <span class="log-level">WARNING</span>
-                            <span class="log-message">Low storage space detected</span>
-                        </div>
-                        <div class="log-entry info">
-                            <span class="log-time">2024-01-15 14:28:00</span>
-                            <span class="log-level">INFO</span>
-                            <span class="log-message">Backup process initiated</span>
-                        </div>
+                    <div class="setting-item">
+                        <label for="animations-enabled">Enable Animations</label>
+                        <input type="checkbox" id="animations-enabled" checked onchange="updateSetting('animationsEnabled', this.checked)">
                     </div>
                 </div>
             </div>
-            
-            <!-- Settings Page -->
-            <div class="page" id="settings">
-                <div class="page-header">
-                    <h2>System Settings</h2>
-                    <p>Configure KernelSU and backup preferences</p>
-                </div>
-                
-                <div class="settings-container">
-                    <div class="settings-section">
-                        <h3>Backup Settings</h3>
-                        <div class="setting-item">
-                            <label for="auto-backup">Automatic Backups</label>
-                            <input type="checkbox" id="auto-backup" checked>
-                            <span class="setting-description">Automatically create backups before risky operations</span>
-                        </div>
-                        <div class="setting-item">
-                            <label for="backup-interval">Backup Interval</label>
-                            <select id="backup-interval">
-                                <option value="daily">Daily</option>
-                                <option value="weekly" selected>Weekly</option>
-                                <option value="monthly">Monthly</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="settings-section">
-                        <h3>Security Settings</h3>
-                        <div class="setting-item">
-                            <label for="bootloop-protection">Bootloop Protection</label>
-                            <input type="checkbox" id="bootloop-protection" checked>
-                            <span class="setting-description">Enable automatic bootloop detection and recovery</span>
-                        </div>
-                        <div class="setting-item">
-                            <label for="safe-mode-timeout">Safe Mode Timeout</label>
-                            <select id="safe-mode-timeout">
-                                <option value="30">30 seconds</option>
-                                <option value="60" selected>1 minute</option>
-                                <option value="120">2 minutes</option>
-                                <option value="300">5 minutes</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="settings-section">
-                        <h3>Interface Settings</h3>
-                        <div class="setting-item">
-                            <label for="theme-mode">Theme</label>
-                            <select id="theme-mode">
-                                <option value="auto" selected>Auto</option>
-                                <option value="dark">Dark</option>
-                                <option value="light">Light</option>
-                            </select>
-                        </div>
-                        <div class="setting-item">
-                            <label for="notifications">Show Notifications</label>
-                            <input type="checkbox" id="notifications" checked>
-                            <span class="setting-description">Display system notifications and alerts</span>
-                        </div>
-                    </div>
-                    
-                    <div class="settings-actions">
-                        <button class="btn-primary" onclick="app.saveSettings()">Save Settings</button>
-                        <button class="btn-secondary" onclick="app.resetSettings()">Reset to Defaults</button>
-                    </div>
-                </div>
+        </div>
+
+        <div class="logs-container">
+            <div class="logs-header">
+                <h3>System Logs</h3>
+                <button class="action-btn" onclick="refreshLogs()">Refresh</button>
             </div>
-        </main>
+            <div class="logs-viewer" id="logs-viewer">
+                <div class="log-entry info">[INFO] KernelSU Anti-Bootloop module initialized</div>
+                <div class="log-entry success">[SUCCESS] System protection active</div>
+                <div class="log-entry info">[INFO] WebUI interface loaded</div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processing...</p>
+        </div>
     </div>
 
-    <!-- System Error Indicator -->
-    <div class="system-error-indicator" id="system-error-indicator">
-        <i class="fas fa-exclamation-triangle"></i>
-        System Errors Detected
-    </div>
-
-    <!-- Notification Container -->
-    <div id="notification-container" class="notification-container"></div>
-
-    <!-- Loading Overlay -->
-    <div id="loading-overlay" class="loading-overlay">
-        <div class="loading-spinner"></div>
-        <p>Loading...</p>
-    </div>
-    
-    <!-- JavaScript -->
-    <script src="js/app.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/main.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>

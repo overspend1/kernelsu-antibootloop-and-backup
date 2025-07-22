@@ -87,7 +87,7 @@ const DashboardController = {
      */
     loadBootHistory: async function() {
         try {
-            if (window.AppState.isOffline) {
+            if (window.MainAppState && window.MainAppState.isOffline) {
                 // Use mock data in offline mode
                 const mockBootHistory = [
                     { timestamp: new Date(Date.now() - 86400000).toISOString(), date: new Date(Date.now() - 86400000), status: 'success', duration: 2 },
@@ -150,7 +150,7 @@ const DashboardController = {
      */
     loadSystemMetrics: async function() {
         try {
-            if (window.AppState.isOffline) {
+            if (window.MainAppState && window.MainAppState.isOffline) {
                 // Use mock data in offline mode
                 const mockSystemMetrics = {
                     cpu: { usage: 45 },
@@ -204,7 +204,7 @@ const DashboardController = {
      */
     loadDiskUsage: async function() {
         try {
-            if (window.AppState.isOffline) {
+            if (window.MainAppState && window.MainAppState.isOffline) {
                 // Use mock data in offline mode
                 const mockDiskUsage = {
                     total: '128G',
@@ -290,7 +290,7 @@ const DashboardController = {
      */
     loadBackupData: async function() {
         try {
-            if (window.AppState.isOffline) {
+            if (window.MainAppState && window.MainAppState.isOffline) {
                 // Use mock data in offline mode
                 const mockBackupSizes = [
                     { name: 'system_backup_2024-01-18.tar.gz', size: 2147483648, formattedSize: '2.0 GB' },
@@ -351,7 +351,7 @@ const DashboardController = {
      */
     loadActivityLog: async function() {
         try {
-            if (window.AppState.isOffline) {
+            if (window.MainAppState && window.MainAppState.isOffline) {
                 // Use mock data in offline mode
                 const mockActivityLog = [
                     {
@@ -1037,7 +1037,7 @@ const DashboardController = {
      */
     checkForNotifications: async function() {
         try {
-            if (window.AppState.isOffline) {
+            if (window.MainAppState && window.MainAppState.isOffline) {
                 // Skip in offline mode
                 return;
             }
@@ -1321,7 +1321,7 @@ const DashboardController = {
         }
         
         try {
-            if (!window.AppState.isOffline) {
+            if (window.MainAppState && !window.MainAppState.isOffline) {
                 // Clear notifications on server
                 await window.ksu.exec(`echo '[]' > ${window.CONFIG_PATH}/notifications.json`);
             }

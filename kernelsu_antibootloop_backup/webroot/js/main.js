@@ -31,11 +31,36 @@ const APP_CONFIG = {
 };
 
 // Global state
-const AppState = {
+const MainAppState = {
     isOnline: true,
     isWebUIXConnected: false,
     currentPage: 'dashboard',
-    settings: { ...APP_CONFIG.defaultSettings },
+    isLoading: false,
+    lastBackup: null,
+    systemHealth: 100,
+    storageInfo: null,
+    protectionStatus: 'active',
+    logs: [],
+    isKernelSUAvailable: !!window.ksu,
+    currentTab: 'dashboard',
+    realTimeMonitoring: false,
+    settings: { 
+        ...APP_CONFIG.defaultSettings,
+        autoBackup: false,
+        backupInterval: 24,
+        maxBackups: 10,
+        monitoringEnabled: true,
+        alertThreshold: 80,
+        theme: 'auto',
+        animationsEnabled: true
+    },
+    metrics: {
+        cpu: 0,
+        memory: 0,
+        storage: 0,
+        temperature: 0
+    },
+    backupList: [],
     systemInfo: {
         deviceModel: 'Unknown',
         androidVersion: 'Unknown',
@@ -93,16 +118,22 @@ document.addEventListener('DOMContentLoaded', () => {
 function initWebUIX() {
     if (typeof ksu !== 'undefined') {
         console.log('WebUIX API detected, initializing integration');
-        AppState.isWebUIXConnected = true;
+        MainAppState.isWebUIXConnected = true;
         
         // Update connection status indicator
-        document.getElementById('connection-status').title = 'WebUIX connected';
-        document.getElementById('connection-status').querySelector('i').textContent = 'cloud_done';
+        const connectionStatus = document.getElementById('connection-status');
+        if (connectionStatus) {
+            connectionStatus.title = 'WebUIX connected';
+            const icon = connectionStatus.querySelector('i');
+            if (icon) {
+                icon.textContent = 'cloud_done';
+            }
+        }
         
         // Get module information
         try {
             const moduleInfo = ksu.moduleInfo();
-            AppState.systemInfo.moduleVersion = moduleInfo.version || APP_CONFIG.version;
+            MainAppState.systemInfo.moduleVersion = moduleInfo.version || APP_CONFIG.version;
             console.log('Module info:', moduleInfo);
         } catch (error) {
             console.error('Failed to get module info:', error);
@@ -112,7 +143,7 @@ function initWebUIX() {
         fetchSystemInfo();
     } else {
         console.warn('WebUIX API not detected, running in standalone mode');
-        AppState.isWebUIXConnected = false;
+        MainAppState.isWebUIXConnected = false;
         
         // Update connection status indicator
         document.getElementById('connection-status').title = 'WebUIX not connected';
@@ -183,8 +214,8 @@ async function checkConnectivity() {
  * @param {boolean} isOffline - Whether offline mode should be enabled
  */
 function toggleOfflineMode(isOffline) {
-    const wasOffline = AppState.isOnline === false;
-    AppState.isOnline = !isOffline;
+    const wasOffline = MainAppState.isOnline === false;
+    MainAppState.isOnline = !isOffline;
     
     const offlineBanner = document.getElementById('offline-banner');
     
@@ -285,29 +316,29 @@ function setupEventListeners() {
  */
 function loadSettings() {
     try {
-        if (AppState.isWebUIXConnected) {
+        if (MainAppState.isWebUIXConnected) {
             // Fetch settings from WebUIX
             executeCommand('cat /data/adb/modules/kernelsu_antibootloop_backup/config/settings.json')
                 .then(settingsJson => {
                     if (settingsJson) {
                         try {
                             const settings = JSON.parse(settingsJson);
-                            AppState.settings = { ...APP_CONFIG.defaultSettings, ...settings };
+                            MainAppState.settings = { ...APP_CONFIG.defaultSettings, ...settings };
                             updateSettingsUI();
                         } catch (error) {
                             console.error('Failed to parse settings JSON:', error);
-                            AppState.settings = { ...APP_CONFIG.defaultSettings };
+                            MainAppState.settings = { ...APP_CONFIG.defaultSettings };
                             updateSettingsUI();
                         }
                     } else {
                         // No settings file found, use defaults
-                        AppState.settings = { ...APP_CONFIG.defaultSettings };
+                        MainAppState.settings = { ...APP_CONFIG.defaultSettings };
                         updateSettingsUI();
                     }
                 })
                 .catch(error => {
                     console.error('Failed to load settings:', error);
-                    AppState.settings = { ...APP_CONFIG.defaultSettings };
+                    MainAppState.settings = { ...APP_CONFIG.defaultSettings };
                     updateSettingsUI();
                 });
         } else {
@@ -315,19 +346,19 @@ function loadSettings() {
             const savedSettings = localStorage.getItem('ksu_app_settings');
             if (savedSettings) {
                 try {
-                    AppState.settings = { ...APP_CONFIG.defaultSettings, ...JSON.parse(savedSettings) };
+                    MainAppState.settings = { ...APP_CONFIG.defaultSettings, ...JSON.parse(savedSettings) };
                 } catch (error) {
                     console.error('Failed to parse saved settings:', error);
-                    AppState.settings = { ...APP_CONFIG.defaultSettings };
+                    MainAppState.settings = { ...APP_CONFIG.defaultSettings };
                 }
             } else {
-                AppState.settings = { ...APP_CONFIG.defaultSettings };
+                MainAppState.settings = { ...APP_CONFIG.defaultSettings };
             }
             updateSettingsUI();
         }
     } catch (error) {
         console.error('Error loading settings:', error);
-        AppState.settings = { ...APP_CONFIG.defaultSettings };
+        MainAppState.settings = { ...APP_CONFIG.defaultSettings };
         updateSettingsUI();
     }
 }
@@ -336,7 +367,7 @@ function loadSettings() {
  * Update the settings UI to reflect current settings
  */
 function updateSettingsUI() {
-    const { settings } = AppState;
+    const { settings } = MainAppState;
     
     // General settings
     document.getElementById('webui-enabled').checked = true; // Always true if WebUI is running
@@ -385,10 +416,10 @@ function saveSettings() {
     };
     
     // Update application state
-    AppState.settings = settings;
+    MainAppState.settings = settings;
     
     // Save settings
-    if (AppState.isWebUIXConnected) {
+    if (MainAppState.isWebUIXConnected) {
         // Save to WebUIX
         const settingsJson = JSON.stringify(settings, null, 2);
         executeCommand(`echo '${settingsJson}' > /data/adb/modules/kernelsu_antibootloop_backup/config/settings.json`)
@@ -416,12 +447,12 @@ function resetSettings() {
         'Reset',
         'Cancel',
         () => {
-            AppState.settings = { ...APP_CONFIG.defaultSettings };
+            MainAppState.settings = { ...APP_CONFIG.defaultSettings };
             updateSettingsUI();
             
-            if (AppState.isWebUIXConnected) {
+            if (MainAppState.isWebUIXConnected) {
                 // Save to WebUIX
-                const settingsJson = JSON.stringify(AppState.settings, null, 2);
+                const settingsJson = JSON.stringify(MainAppState.settings, null, 2);
                 executeCommand(`echo '${settingsJson}' > /data/adb/modules/kernelsu_antibootloop_backup/config/settings.json`)
                     .then(() => {
                         UI.showToast('Settings reset to defaults');
@@ -432,7 +463,7 @@ function resetSettings() {
                     });
             } else {
                 // Save to localStorage in standalone mode
-                localStorage.setItem('ksu_app_settings', JSON.stringify(AppState.settings));
+                localStorage.setItem('ksu_app_settings', JSON.stringify(MainAppState.settings));
                 UI.showToast('Settings reset to defaults');
             }
         }
@@ -484,7 +515,7 @@ function refreshData() {
  * Fetch system information
  */
 async function fetchSystemInfo() {
-    if (!AppState.isWebUIXConnected) {
+    if (!MainAppState.isWebUIXConnected) {
         // In standalone mode, use mock data
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             loadMockSystemInfo();
@@ -495,19 +526,19 @@ async function fetchSystemInfo() {
     try {
         // Get device model
         const deviceModel = await executeCommand('getprop ro.product.model');
-        AppState.systemInfo.deviceModel = deviceModel.trim() || 'Unknown';
+        MainAppState.systemInfo.deviceModel = deviceModel.trim() || 'Unknown';
         
         // Get Android version
         const androidVersion = await executeCommand('getprop ro.build.version.release');
-        AppState.systemInfo.androidVersion = androidVersion.trim() || 'Unknown';
+        MainAppState.systemInfo.androidVersion = androidVersion.trim() || 'Unknown';
         
         // Get KernelSU version
         const kernelSUVersion = await executeCommand('su -v');
-        AppState.systemInfo.kernelSUVersion = kernelSUVersion.trim() || 'Unknown';
+        MainAppState.systemInfo.kernelSUVersion = kernelSUVersion.trim() || 'Unknown';
         
         // Get kernel version
         const kernelVersion = await executeCommand('uname -r');
-        AppState.systemInfo.kernelVersion = kernelVersion.trim() || 'Unknown';
+        MainAppState.systemInfo.kernelVersion = kernelVersion.trim() || 'Unknown';
         
         // Update last boot time
         const uptime = await executeCommand('cat /proc/uptime');
@@ -535,7 +566,7 @@ async function fetchSystemInfo() {
  * Fetch list of backups
  */
 async function fetchBackupList() {
-    if (!AppState.isWebUIXConnected) {
+    if (!MainAppState.isWebUIXConnected) {
         // In standalone mode, use mock data
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             loadMockBackups();
@@ -544,11 +575,11 @@ async function fetchBackupList() {
     }
     
     try {
-        const backupPath = AppState.settings.storagePath;
+        const backupPath = MainAppState.settings.storagePath;
         const result = await executeCommand(`ls -la ${backupPath}`);
         
         if (!result) {
-            AppState.backups = [];
+            MainAppState.backups = [];
             return;
         }
         
@@ -584,7 +615,7 @@ async function fetchBackupList() {
             }
         }
         
-        AppState.backups = backups;
+        MainAppState.backups = backups;
         
         // Update backup count
         document.getElementById('backup-count').textContent = backups.length.toString();
@@ -614,7 +645,7 @@ async function fetchBackupList() {
  * Fetch recovery points
  */
 async function fetchRecoveryPoints() {
-    if (!AppState.isWebUIXConnected) {
+    if (!MainAppState.isWebUIXConnected) {
         // In standalone mode, use mock data
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             loadMockRecoveryPoints();
@@ -627,7 +658,7 @@ async function fetchRecoveryPoints() {
         const result = await executeCommand(`ls -la ${recoveryPath}`);
         
         if (!result) {
-            AppState.recoveryPoints = [];
+            MainAppState.recoveryPoints = [];
             return;
         }
         
@@ -659,7 +690,7 @@ async function fetchRecoveryPoints() {
             }
         }
         
-        AppState.recoveryPoints = recoveryPoints;
+        MainAppState.recoveryPoints = recoveryPoints;
         return true;
     } catch (error) {
         console.error('Error fetching recovery points:', error);
@@ -671,7 +702,7 @@ async function fetchRecoveryPoints() {
  * Fetch boot history
  */
 async function fetchBootHistory() {
-    if (!AppState.isWebUIXConnected) {
+    if (!MainAppState.isWebUIXConnected) {
         // In standalone mode, use mock data
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             loadMockBootHistory();
@@ -684,7 +715,7 @@ async function fetchBootHistory() {
         const result = await executeCommand(`cat ${bootHistoryPath}`);
         
         if (!result) {
-            AppState.bootHistory = [];
+            MainAppState.bootHistory = [];
             return;
         }
         
@@ -707,7 +738,7 @@ async function fetchBootHistory() {
             }
         }
         
-        AppState.bootHistory = bootHistory;
+        MainAppState.bootHistory = bootHistory;
         return true;
     } catch (error) {
         console.error('Error fetching boot history:', error);
@@ -719,7 +750,7 @@ async function fetchBootHistory() {
  * Fetch disk space information
  */
 async function fetchDiskSpace() {
-    if (!AppState.isWebUIXConnected) {
+    if (!MainAppState.isWebUIXConnected) {
         // In standalone mode, use mock data
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             loadMockDiskSpace();
@@ -774,7 +805,7 @@ async function fetchDiskSpace() {
  * Fetch activity log
  */
 async function fetchActivityLog() {
-    if (!AppState.isWebUIXConnected) {
+    if (!MainAppState.isWebUIXConnected) {
         // In standalone mode, use mock data
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             loadMockActivityLog();
@@ -787,7 +818,7 @@ async function fetchActivityLog() {
         const result = await executeCommand(`cat ${activityLogPath}`);
         
         if (!result) {
-            AppState.activityLog = [];
+            MainAppState.activityLog = [];
             return;
         }
         
@@ -813,7 +844,7 @@ async function fetchActivityLog() {
         // Sort by timestamp, newest first
         activityLog.sort((a, b) => b.timestamp - a.timestamp);
         
-        AppState.activityLog = activityLog;
+        MainAppState.activityLog = activityLog;
         return true;
     } catch (error) {
         console.error('Error fetching activity log:', error);
@@ -832,7 +863,7 @@ function updateBackupList() {
     const existingItems = backupList.querySelectorAll('.backup-item');
     existingItems.forEach(item => item.remove());
     
-    if (AppState.backups.length === 0) {
+    if (MainAppState.backups.length === 0) {
         placeholderText.style.display = 'block';
         return;
     }
@@ -840,7 +871,7 @@ function updateBackupList() {
     placeholderText.style.display = 'none';
     
     // Create backup items
-    for (const backup of AppState.backups) {
+    for (const backup of MainAppState.backups) {
         const backupItem = document.createElement('div');
         backupItem.className = 'backup-item card md-card';
         backupItem.dataset.type = backup.type;
@@ -900,7 +931,7 @@ function updateBackupList() {
         const existingItems = recoveryPointList.querySelectorAll('.recovery-point-item');
         existingItems.forEach(item => item.remove());
         
-        if (AppState.recoveryPoints.length === 0) {
+        if (MainAppState.recoveryPoints.length === 0) {
             placeholderText.style.display = 'block';
             return;
         }
@@ -908,7 +939,7 @@ function updateBackupList() {
         placeholderText.style.display = 'none';
         
         // Create recovery point items
-        for (const point of AppState.recoveryPoints) {
+        for (const point of MainAppState.recoveryPoints) {
             const pointItem = document.createElement('div');
             pointItem.className = 'recovery-point-item';
             
@@ -1093,7 +1124,7 @@ function showBackupDialog() {
             <div class="form-group">
                 <label for="backup-compression">Compression:</label>
                 <div class="switch-container">
-                    <input type="checkbox" id="backup-compression-toggle" ${AppState.settings.backupCompression ? 'checked' : ''}>
+                    <input type="checkbox" id="backup-compression-toggle" ${MainAppState.settings.backupCompression ? 'checked' : ''}>
                     <label class="switch-label" for="backup-compression-toggle"></label>
                 </div>
             </div>
@@ -1101,12 +1132,12 @@ function showBackupDialog() {
             <div class="form-group">
                 <label for="backup-encryption">Encryption:</label>
                 <div class="switch-container">
-                    <input type="checkbox" id="backup-encryption-toggle" ${AppState.settings.backupEncryption ? 'checked' : ''}>
+                    <input type="checkbox" id="backup-encryption-toggle" ${MainAppState.settings.backupEncryption ? 'checked' : ''}>
                     <label class="switch-label" for="backup-encryption-toggle"></label>
                 </div>
             </div>
             
-            <div id="encryption-password" style="display: ${AppState.settings.backupEncryption ? 'block' : 'none'};">
+            <div id="encryption-password" style="display: ${MainAppState.settings.backupEncryption ? 'block' : 'none'};">
                 <div class="form-group">
                     <label for="backup-password">Password:</label>
                     <input type="password" id="backup-password" class="md-input" placeholder="Enter encryption password">
@@ -1218,13 +1249,13 @@ function startBackup() {
         command += ` --encrypt --password "${password}"`;
     }
     
-    if (!AppState.isWebUIXConnected) {
+    if (!MainAppState.isWebUIXConnected) {
         UI.hideLoader();
         UI.showToast('Backup created successfully (mock mode)');
         
         // Add mock backup
         const now = new Date();
-        AppState.backups.push({
+        MainAppState.backups.push({
             name: `${name}_${type}_${now.toISOString().slice(0, 10)}.tar.gz`,
             path: `/data/adb/modules/kernelsu_antibootloop_backup/config/backups/${name}_${type}_${now.toISOString().slice(0, 10)}.tar.gz`,
             size: '1.2G',
@@ -1238,7 +1269,7 @@ function startBackup() {
         // Create recovery point if selected
         if (createRecoveryPoint) {
             const pointName = `backup_point_${now.getTime()}.point`;
-            AppState.recoveryPoints.push({
+            MainAppState.recoveryPoints.push({
                 name: pointName,
                 path: `/data/adb/modules/kernelsu_antibootloop_backup/config/recovery_points/${pointName}`,
                 date: now,
@@ -1292,17 +1323,17 @@ function performQuickBackup() {
     // Build backup command with defaults
     let command = `sh /data/adb/modules/kernelsu_antibootloop_backup/scripts/backup-engine.sh create --name "${name}" --type full`;
     
-    if (AppState.settings.backupCompression) {
+    if (MainAppState.settings.backupCompression) {
         command += ' --compress';
     }
     
-    if (!AppState.isWebUIXConnected) {
+    if (!MainAppState.isWebUIXConnected) {
         UI.hideLoader();
         UI.showToast('Quick backup created successfully (mock mode)');
         
         // Add mock backup
         const now = new Date();
-        AppState.backups.push({
+        MainAppState.backups.push({
             name: `${name}_full_${now.toISOString().slice(0, 10)}.tar.gz`,
             path: `/data/adb/modules/kernelsu_antibootloop_backup/config/backups/${name}_full_${now.toISOString().slice(0, 10)}.tar.gz`,
             size: '1.2G',
@@ -1409,7 +1440,7 @@ function showRestoreDialog(backup) {
     UI.initSwitches();
     
     // Check if backup might be encrypted
-    if (backup.name.includes('.enc') || AppState.settings.backupEncryption) {
+    if (backup.name.includes('.enc') || MainAppState.settings.backupEncryption) {
         document.getElementById('encryption-password-restore').style.display = 'block';
     }
 }
@@ -1455,7 +1486,7 @@ function restoreBackup(backup) {
             command += ` --password "${password}"`;
         }
         
-        if (!AppState.isWebUIXConnected) {
+        if (!MainAppState.isWebUIXConnected) {
             setTimeout(() => {
                 UI.hideLoader();
                 UI.showToast('Backup restored successfully (mock mode)');
@@ -1522,14 +1553,14 @@ function showDeleteBackupDialog(backup) {
 function deleteBackup(backup) {
     UI.showLoader('Deleting backup...');
     
-    if (!AppState.isWebUIXConnected) {
+    if (!MainAppState.isWebUIXConnected) {
         setTimeout(() => {
             UI.hideLoader();
             
             // Remove from array
-            const index = AppState.backups.findIndex(b => b.name === backup.name);
+            const index = MainAppState.backups.findIndex(b => b.name === backup.name);
             if (index !== -1) {
-                AppState.backups.splice(index, 1);
+                MainAppState.backups.splice(index, 1);
             }
             
             // Update UI
@@ -1546,9 +1577,9 @@ function deleteBackup(backup) {
             UI.hideLoader();
             
             // Remove from array
-            const index = AppState.backups.findIndex(b => b.name === backup.name);
+            const index = MainAppState.backups.findIndex(b => b.name === backup.name);
             if (index !== -1) {
-                AppState.backups.splice(index, 1);
+                MainAppState.backups.splice(index, 1);
             }
             
             // Update UI
@@ -1576,7 +1607,7 @@ function deleteBackup(backup) {
 function exportBackup(backup) {
     UI.showLoader('Preparing backup for export...');
     
-    if (!AppState.isWebUIXConnected) {
+    if (!MainAppState.isWebUIXConnected) {
         setTimeout(() => {
             UI.hideLoader();
             UI.showToast('Backup exported successfully (mock mode)');
@@ -1652,14 +1683,14 @@ function showImportDialog() {
 function importBackup(filename) {
     UI.showLoader('Importing backup...');
     
-    if (!AppState.isWebUIXConnected) {
+    if (!MainAppState.isWebUIXConnected) {
         setTimeout(() => {
             UI.hideLoader();
             UI.showToast('Backup imported successfully (mock mode)');
             
             // Add mock backup
             const now = new Date();
-            AppState.backups.push({
+            MainAppState.backups.push({
                 name: filename,
                 path: `/data/adb/modules/kernelsu_antibootloop_backup/config/backups/${filename}`,
                 size: '1.5G',
@@ -1819,7 +1850,7 @@ function createBackupProfile() {
     
     UI.showLoader('Creating profile...');
     
-    if (!AppState.isWebUIXConnected) {
+    if (!MainAppState.isWebUIXConnected) {
         setTimeout(() => {
             UI.hideLoader();
             UI.showToast('Profile created successfully (mock mode)');
@@ -1853,7 +1884,7 @@ function createBackupProfile() {
  * @returns {Promise<string>} Command result
  */
 async function executeCommand(cmd, timeout = 10000) {
-    if (!AppState.isWebUIXConnected) {
+    if (!MainAppState.isWebUIXConnected) {
         // Return mock data for development
         return new Promise((resolve) => {
             setTimeout(() => {
@@ -1883,11 +1914,11 @@ function logActivity(type, message) {
         message
     };
     
-    AppState.activityLog.unshift(activity);
+    MainAppState.activityLog.unshift(activity);
     
     // Keep only last 50 activities
-    if (AppState.activityLog.length > 50) {
-        AppState.activityLog = AppState.activityLog.slice(0, 50);
+    if (MainAppState.activityLog.length > 50) {
+        MainAppState.activityLog = MainAppState.activityLog.slice(0, 50);
     }
     
     // Update activity log in dashboard
@@ -1909,7 +1940,7 @@ function loadMockData() {
 }
 
 function loadMockSystemInfo() {
-    AppState.systemInfo = {
+    MainAppState.systemInfo = {
         deviceModel: 'Mock Device',
         androidVersion: '13',
         kernelSUVersion: 'v0.7.0',
@@ -1920,7 +1951,7 @@ function loadMockSystemInfo() {
 
 function loadMockBackups() {
     const now = new Date();
-    AppState.backups = [
+    MainAppState.backups = [
         {
             name: 'full_backup_20240120.tar.gz',
             path: '/mock/path/full_backup_20240120.tar.gz',
@@ -1940,7 +1971,7 @@ function loadMockBackups() {
 
 function loadMockRecoveryPoints() {
     const now = new Date();
-    AppState.recoveryPoints = [
+    MainAppState.recoveryPoints = [
         {
             name: 'recovery_point_1705750800.point',
             path: '/mock/path/recovery_point_1705750800.point',
@@ -1952,7 +1983,7 @@ function loadMockRecoveryPoints() {
 
 function loadMockBootHistory() {
     const now = new Date();
-    AppState.bootHistory = [
+    MainAppState.bootHistory = [
         {
             timestamp: now.getTime() - 3600000,
             date: new Date(now.getTime() - 3600000),
@@ -1989,7 +2020,7 @@ function loadMockDiskSpace() {
 
 function loadMockActivityLog() {
     const now = new Date();
-    AppState.activityLog = [
+    MainAppState.activityLog = [
         {
             timestamp: now.getTime() - 1800000,
             date: new Date(now.getTime() - 1800000),
@@ -2043,7 +2074,7 @@ function formatSize(bytes) {
  * Update system info in UI
  */
 function updateSystemInfo() {
-    const { systemInfo } = AppState;
+    const { systemInfo } = MainAppState;
     
     // Update system overview
     const deviceModel = document.getElementById('device-model');
@@ -2101,12 +2132,12 @@ function showOfflineDetails() {
 function showActivityLog() {
     let content = '<div class="activity-log-modal">';
     
-    if (AppState.activityLog.length === 0) {
+    if (MainAppState.activityLog.length === 0) {
         content += '<p class="placeholder-text">No activity to display</p>';
     } else {
         content += '<div class="activity-list">';
         
-        AppState.activityLog.forEach(activity => {
+        MainAppState.activityLog.forEach(activity => {
             const typeIcon = {
                 'backup': 'backup',
                 'restore': 'restore',
@@ -2149,7 +2180,7 @@ function testProtection() {
             UI.showLoader('Testing bootloop protection...');
             
             try {
-                if (AppState.isWebUIXConnected) {
+                if (MainAppState.isWebUIXConnected) {
                     const result = await executeCommand('sh /data/adb/modules/kernelsu_antibootloop_backup/scripts/test-protection.sh');
                     
                     if (result && result.includes('Test completed successfully')) {
@@ -2183,7 +2214,7 @@ function createRecoveryPoint(description = 'Manual recovery point') {
         try {
             UI.showLoader('Creating recovery point...');
             
-            if (AppState.isWebUIXConnected) {
+            if (MainAppState.isWebUIXConnected) {
                 const name = `recovery_point_${Date.now()}.point`;
                 const command = `sh /data/adb/modules/kernelsu_antibootloop_backup/scripts/recovery-point.sh create "${name}" "${description}"`;
                 
@@ -2194,7 +2225,7 @@ function createRecoveryPoint(description = 'Manual recovery point') {
                     logActivity('safety', `Created recovery point: ${description}`);
                     
                     // Add to recovery points array
-                    AppState.recoveryPoints.push({
+                    MainAppState.recoveryPoints.push({
                         name,
                         path: `/data/adb/modules/kernelsu_antibootloop_backup/config/recovery_points/${name}`,
                         date: new Date(),
@@ -2214,7 +2245,7 @@ function createRecoveryPoint(description = 'Manual recovery point') {
                     logActivity('safety', `Created recovery point: ${description} (mock)`);
                     
                     const name = `recovery_point_${Date.now()}.point`;
-                    AppState.recoveryPoints.push({
+                    MainAppState.recoveryPoints.push({
                         name,
                         path: `/mock/path/${name}`,
                         date: new Date(),
@@ -2248,7 +2279,7 @@ function showRebootDialog(message) {
         async () => {
             UI.showLoader('Rebooting device...');
             
-            if (AppState.isWebUIXConnected) {
+            if (MainAppState.isWebUIXConnected) {
                 try {
                     await executeCommand('reboot');
                 } catch (error) {
@@ -2271,7 +2302,7 @@ function showLogs() {
     UI.showLoader('Loading logs...');
     
     const loadLogs = async () => {
-        if (!AppState.isWebUIXConnected) {
+        if (!MainAppState.isWebUIXConnected) {
             return 'Mock log content\n[INFO] Module started\n[INFO] Bootloop protection enabled\n[INFO] Backup system ready';
         }
         
@@ -2332,10 +2363,10 @@ function showAboutDialog() {
             
             <div class="system-info">
                 <h4>System Information:</h4>
-                <p>Device: ${AppState.systemInfo.deviceModel}</p>
-                <p>Android: ${AppState.systemInfo.androidVersion}</p>
-                <p>KernelSU: ${AppState.systemInfo.kernelSUVersion}</p>
-                <p>Kernel: ${AppState.systemInfo.kernelVersion}</p>
+                <p>Device: ${MainAppState.systemInfo.deviceModel}</p>
+                <p>Android: ${MainAppState.systemInfo.androidVersion}</p>
+                <p>KernelSU: ${MainAppState.systemInfo.kernelSUVersion}</p>
+                <p>Kernel: ${MainAppState.systemInfo.kernelVersion}</p>
             </div>
         </div>
     `;
@@ -2353,4 +2384,5 @@ window.showRebootDialog = showRebootDialog;
 window.showLogs = showLogs;
 window.showAboutDialog = showAboutDialog;
 window.parseSize = parseSize;
-window.AppState = AppState;
+window.MainAppState = MainAppState;
+window.AppState = MainAppState;

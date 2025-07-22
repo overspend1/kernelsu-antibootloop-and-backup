@@ -520,7 +520,13 @@ const ModuleAPI = {
                 // Get boot information
                 const bootInfoCmd = 'cat /data/adb/modules/kernelsu_antibootloop_backup/config/boot_info.json || echo "{}"';
                 const bootInfoJson = await this.execCommand(bootInfoCmd);
-                const bootInfo = JSON.parse(bootInfoJson || '{"bootCount":0,"lastBoot":"None"}');
+                let bootInfo;
+                try {
+                    bootInfo = JSON.parse(bootInfoJson || '{"bootCount":0,"lastBoot":"None"}');
+                } catch (parseError) {
+                    console.warn('Failed to parse boot info JSON:', parseError, 'Raw output:', bootInfoJson);
+                    bootInfo = {bootCount: 0, lastBoot: 'None'};
+                }
                 
                 // Get memory info
                 const memInfo = await this.execCommand('cat /proc/meminfo | head -3', { 
@@ -992,9 +998,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('ModuleAPI initialized successfully');
                     
                     // Update app state with system info
-                    if (typeof AppState !== 'undefined') {
+                    if (typeof MainAppState !== 'undefined') {
                         ModuleAPI.getSystemStatus().then(info => {
-                            AppState.systemInfo = info;
+                            MainAppState.systemInfo = info;
                             updateSystemInfo();
                         });
                     }

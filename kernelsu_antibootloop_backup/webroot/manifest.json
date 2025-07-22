@@ -1,138 +1,36 @@
 {
-  "name": "KernelSU Anti-Bootloop & Backup",
-  "short_name": "KSU Backup",
-  "description": "Advanced KernelSU module that combines anti-bootloop protection with comprehensive backup and restoration capabilities for Android system security",
-  "version": "1.0.0",
-  "start_url": "/index.html",
-  "id": "/index.html",
-  "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
-  "background_color": "#2196F3",
-  "theme_color": "#2196F3",
-  "icons": [
-    {
-      "src": "images/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "images/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "images/icon-maskable-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "images/icon-maskable-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "images/icon-monochrome-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "monochrome"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Create Backup",
-      "short_name": "Backup",
-      "description": "Create a new system backup",
-      "url": "/index.html#backups?action=create",
-      "icons": [{ "src": "images/backup-icon.svg", "sizes": "96x96" }]
-    },
-    {
-      "name": "Restore System",
-      "short_name": "Restore",
-      "description": "Restore from an existing backup",
-      "url": "/index.html#backups?action=restore",
-      "icons": [{ "src": "images/restore-icon.svg", "sizes": "96x96" }]
-    },
-    {
-      "name": "Safety Settings",
-      "short_name": "Safety",
-      "description": "Adjust bootloop protection settings",
-      "url": "/index.html#safety",
-      "icons": [{ "src": "images/protection-icon.svg", "sizes": "96x96" }]
-    }
-  ],
-  "orientation": "any",
-  "prefer_related_applications": false,
-  "related_applications": [],
-  "scope": "/",
-  "categories": ["utilities", "system tools", "backup", "security"],
-  "lang": "en-US",
-  "dir": "ltr",
-  "launch_handler": {
-    "client_mode": ["navigate-existing", "auto"]
-  },
-  "edge_side_panel": {
-    "preferred_width": 400
-  },
-  "screenshots": [
-    {
-      "src": "images/screenshot-dashboard.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "platform": "wide",
-      "label": "Dashboard showing system status"
-    },
-    {
-      "src": "images/screenshot-backup.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "platform": "wide",
-      "label": "Backup management interface"
-    },
-    {
-      "src": "images/screenshot-safety.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "platform": "wide",
-      "label": "Anti-bootloop protection settings"
-    }
-  ],
-  "iarc_rating_id": "",
-  "handle_links": "preferred",
-  "share_target": {
-    "action": "/index.html#backups?action=import",
-    "method": "POST",
-    "enctype": "multipart/form-data",
-    "params": {
-      "files": [
-        {
-          "name": "backupFile",
-          "accept": [".ksubackup", ".zip", "application/zip"]
-        }
-      ]
-    }
-  },
-  "file_handlers": [
-    {
-      "action": "/index.html#backups?action=import",
-      "accept": {
-        "application/zip": [".ksubackup", ".zip"]
-      }
-    }
-  ],
-  "protocol_handlers": [
-    {
-      "protocol": "web+ksubackup",
-      "url": "/index.html#backups?action=import&url=%s"
-    }
-  ],
-  "permissions": ["backups", "system", "notifications"],
-  "serviceworker": {
-    "src": "/service-worker.js",
+    "name": "KernelSU Anti-Bootloop & Backup",
+    "short_name": "KSU Backup",
+    "description": "Advanced system protection and backup management for KernelSU",
+    "version": "1.0.0",
+    "author": "KernelSU Community",
+    "homepage": "https://github.com/kernelsu/kernelsu",
+    "icon": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0idXJsKCNncmFkaWVudDApIi8+CjxwYXRoIGQ9Ik0xNiA4QzEyLjY4NjMgOCAxMCAxMC42ODYzIDEwIDE0VjE4QzEwIDIxLjMxMzcgMTIuNjg2MyAyNCAxNiAyNEMxOS4zMTM3IDI0IDIyIDIxLjMxMzcgMjIgMThWMTRDMjIgMTAuNjg2MyAxOS4zMTM3IDggMTYgOFoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0xNiAxMkMxNC44OTU0IDEyIDE0IDEyLjg5NTQgMTQgMTRWMThDMTQgMTkuMTA0NiAxNC44OTU0IDIwIDE2IDIwQzE3LjEwNDYgMjAgMTggMTkuMTA0NiAxOCAxOFYxNEMxOCAxMi44OTU0IDE3LjEwNDYgMTIgMTYgMTJaIiBmaWxsPSIjNjY3ZWVhIi8+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9ImdyYWRpZW50MCIgeDE9IjAiIHkxPSIwIiB4Mj0iMzIiIHkyPSIzMiIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPgo8c3RvcCBzdG9wLWNvbG9yPSIjNjY3ZWVhIi8+CjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzc2NGJhMiIvPgo8L2xpbmVhckdyYWRpZW50Pgo8L2RlZnM+Cjwvc3ZnPgo=",
+    "theme_color": "#667eea",
+    "background_color": "#764ba2",
+    "display": "standalone",
+    "orientation": "portrait",
+    "start_url": "/",
     "scope": "/",
-    "use_cache": true
-  }
+    "categories": ["utilities", "system", "backup"],
+    "lang": "en",
+    "dir": "ltr",
+    "screenshots": [],
+    "related_applications": [],
+    "prefer_related_applications": false,
+    "kernelsu": {
+        "module_id": "kernelsu_antibootloop_backup",
+        "api_version": "1.0",
+        "permissions": [
+            "exec",
+            "toast",
+            "moduleInfo"
+        ],
+        "features": [
+            "backup_management",
+            "system_monitoring",
+            "bootloop_protection",
+            "emergency_recovery"
+        ]
+    }
 }

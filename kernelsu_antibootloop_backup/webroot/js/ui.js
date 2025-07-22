@@ -774,16 +774,16 @@ const UIController = {
             <div class="form-group">
                 <label for="schedule-enabled">Enable Scheduled Backups:</label>
                 <div class="switch-container">
-                    <input type="checkbox" id="schedule-enabled" ${window.AppState?.settings?.autoBackup ? 'checked' : ''}>
+                    <input type="checkbox" id="schedule-enabled" ${window.MainAppState?.settings?.autoBackup ? 'checked' : ''}>
                     <label class="switch-label" for="schedule-enabled"></label>
                 </div>
             </div>
             <div class="form-group">
                 <label for="schedule-frequency">Backup Frequency:</label>
                 <select id="schedule-frequency" class="md-select">
-                    <option value="daily" ${window.AppState?.settings?.backupSchedule === 'daily' ? 'selected' : ''}>Daily</option>
-                    <option value="weekly" ${window.AppState?.settings?.backupSchedule === 'weekly' ? 'selected' : ''}>Weekly</option>
-                    <option value="monthly" ${window.AppState?.settings?.backupSchedule === 'monthly' ? 'selected' : ''}>Monthly</option>
+                    <option value="daily" ${window.MainAppState?.settings?.backupSchedule === 'daily' ? 'selected' : ''}>Daily</option>
+                    <option value="weekly" ${window.MainAppState?.settings?.backupSchedule === 'weekly' ? 'selected' : ''}>Weekly</option>
+                    <option value="monthly" ${window.MainAppState?.settings?.backupSchedule === 'monthly' ? 'selected' : ''}>Monthly</option>
                 </select>
             </div>
             <div class="form-group">
@@ -805,11 +805,11 @@ const UIController = {
             const notification = document.getElementById('schedule-notification').checked;
             
             // Save schedule settings
-            if (window.AppState && window.AppState.settings) {
-                window.AppState.settings.autoBackup = enabled;
-                window.AppState.settings.backupSchedule = frequency;
-                window.AppState.settings.backupTime = time;
-                window.AppState.settings.backupNotification = notification;
+            if (window.MainAppState && window.MainAppState.settings) {
+                window.MainAppState.settings.autoBackup = enabled;
+                window.MainAppState.settings.backupSchedule = frequency;
+                window.MainAppState.settings.backupTime = time;
+                window.MainAppState.settings.backupNotification = notification;
                 
                 // Save settings
                 if (typeof window.saveSettings === 'function') {
