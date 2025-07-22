@@ -1,0 +1,86 @@
+name: Update MMRL Repository
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  schedule:
+    # Update every day at 00:00 UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-repository:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Update timestamp in repo.json
+      run: |
+        # Update last_update timestamp in repo.json
+        TIMESTAMP=$(date +%s)
+        sed -i "s/\"last_update\": [0-9]*/\"last_update\": $TIMESTAMP/g" repo.json
+        
+        # Update timestamp in modules.json
+        sed -i "s/\"timestamp\": [0-9]*/\"timestamp\": $TIMESTAMP/g" modules.json
+        
+    - name: Validate JSON files
+      run: |
+        echo "Validating repo.json..."
+        python3 -m json.tool repo.json > /dev/null
+        echo "✅ repo.json is valid"
+        
+        echo "Validating modules.json..."
+        python3 -m json.tool modules.json > /dev/null
+        echo "✅ modules.json is valid"
+        
+    - name: Commit changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add .
+        git diff --staged --quiet || git commit -m "🤖 Auto-update repository timestamps"
+        
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ github.ref }}
+
+  deploy-pages:
+    needs: update-repository
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+      
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+      
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: '.'
+        
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4

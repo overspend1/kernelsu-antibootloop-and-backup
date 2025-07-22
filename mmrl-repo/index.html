@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terragon Labs MMRL Repository</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .module-card {
+            border-left: 5px solid #667eea;
+        }
+        
+        .module-title {
+            color: #667eea;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .feature {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .feature-icon {
+            font-size: 1.2rem;
+            margin-right: 8px;
+        }
+        
+        .install-section {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .install-steps {
+            list-style: none;
+            counter-reset: step-counter;
+        }
+        
+        .install-steps li {
+            counter-increment: step-counter;
+            margin: 10px 0;
+            padding-left: 40px;
+            position: relative;
+        }
+        
+        .install-steps li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #667eea;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .repo-url {
+            background: #2d3748;
+            color: #68d391;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            word-break: break-all;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+        
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Terragon Labs</h1>
+            <p>MMRL Repository for Advanced KernelSU Modules</p>
+        </div>
+        
+        <div class="card module-card">
+            <h2 class="module-title">🛡️ KernelSU Anti-Bootloop & Backup</h2>
+            <p><strong>Advanced KernelSU module combining anti-bootloop protection with comprehensive backup and restoration capabilities.</strong></p>
+            
+            <div class="features">
+                <div class="feature">
+                    <span class="feature-icon">🛡️</span>
+                    <strong>Anti-bootloop Protection</strong><br>
+                    Automatic recovery mechanisms
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">💾</span>
+                    <strong>Comprehensive Backup</strong><br>
+                    Encrypted storage system
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">🌐</span>
+                    <strong>WebUI Interface</strong><br>
+                    Easy management through browser
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">🔒</span>
+                    <strong>Encrypted Backups</strong><br>
+                    Hybrid RSA+AES encryption
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">🔄</span>
+                    <strong>Multi-stage Recovery</strong><br>
+                    Escalating intervention levels
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">📱</span>
+                    <strong>Progressive Web App</strong><br>
+                    Material Design interface
+                </div>
+            </div>
+            
+            <div class="install-section">
+                <h3>📥 How to Add This Repository to MMRL</h3>
+                <ol class="install-steps">
+                    <li>Open MMRL app on your device</li>
+                    <li>Go to <strong>Settings</strong> → <strong>Repositories</strong></li>
+                    <li>Tap <strong>Add Repository</strong></li>
+                    <li>Enter the repository URL below</li>
+                    <li>Tap <strong>Add</strong> and wait for sync</li>
+                </ol>
+                
+                <div class="repo-url">
+                    https://raw.githubusercontent.com/terragon-labs/mmrl-repo/main/repo.json
+                </div>
+            </div>
+            
+            <div class="buttons">
+                <a href="https://github.com/terragon-labs/kernelsu-antibootloop-backup" class="btn btn-primary">📂 View Source</a>
+                <a href="https://github.com/terragon-labs/kernelsu-antibootloop-backup/issues" class="btn btn-secondary">🐛 Report Issues</a>
+                <a href="https://github.com/sponsors/terragon-labs" class="btn btn-secondary">💖 Donate</a>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>📋 Requirements</h2>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>Android API 33-35</li>
+                <li>KernelSU v0.7.0+ (version code 10940+)</li>
+                <li>ARM64 architecture</li>
+                <li>MMRL app installed</li>
+            </ul>
+        </div>
+        
+        <div class="card">
+            <h2>🆘 Support</h2>
+            <p>Need help? We're here to assist you:</p>
+            <div class="buttons" style="margin-top: 15px;">
+                <a href="https://github.com/terragon-labs/kernelsu-antibootloop-backup/issues" class="btn btn-primary">GitHub Issues</a>
+                <a href="https://github.com/terragon-labs/kernelsu-antibootloop-backup/discussions" class="btn btn-secondary">Discussions</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,74 @@
+{
+  "modules": [
+    {
+      "id": "kernelsu_antibootloop_backup",
+      "name": "KernelSU Anti-Bootloop & Backup",
+      "version": "v1.0.0",
+      "versionCode": 100,
+      "author": "Wiktor/overspend1",
+      "description": "Advanced KernelSU Next module combining anti-bootloop protection with comprehensive backup and restoration capabilities. Features WebUIX-compliant interface, encrypted backups, and multi-stage recovery mechanisms.",
+      "minApi": 33,
+      "maxApi": 35,
+      "minKernelSU": 10940,
+      "maxKernelSU": 99999,
+      "needRamdisk": false,
+      "support": "https://github.com/terragon-labs/kernelsu-antibootloop-backup/issues",
+      "donate": "https://github.com/sponsors/terragon-labs",
+      "license": "MIT",
+      "homepage": "https://github.com/terragon-labs/kernelsu-antibootloop-backup",
+      "source": "https://github.com/terragon-labs/kernelsu-antibootloop-backup",
+      "readme": "https://raw.githubusercontent.com/terragon-labs/kernelsu-antibootloop-backup/main/README.md",
+      "verified": false,
+      "timestamp": 1737513420,
+      "antifeatures": [],
+      "categories": [
+        "System",
+        "Backup",
+        "Recovery",
+        "Security"
+      ],
+      "features": [
+        "Anti-bootloop protection",
+        "Comprehensive backup system",
+        "WebUI interface",
+        "Encrypted backups",
+        "Multi-stage recovery",
+        "OverlayFS integration",
+        "Hardware button recovery",
+        "Progressive Web App"
+      ],
+      "require": [
+        "kernelsu"
+      ],
+      "root": {
+        "kernelsu": {
+          "minVersion": 10940,
+          "maxVersion": 99999
+        }
+      },
+      "manager": {
+        "mmrl": {
+          "minVersion": 2024120900,
+          "maxVersion": 2147483647
+        }
+      },
+      "track": {
+        "type": "GIT",
+        "source": "https://github.com/terragon-labs/kernelsu-antibootloop-backup",
+        "build": {
+          "enable": true,
+          "keep": 3
+        }
+      },
+      "versions": [
+        {
+          "timestamp": 1737513420,
+          "version": "v1.0.0",
+          "versionCode": 100,
+          "zipUrl": "https://github.com/terragon-labs/kernelsu-antibootloop-backup/releases/download/v1.0.0/kernelsu_antibootloop_backup-v1.0.0.zip",
+          "changelog": "https://raw.githubusercontent.com/terragon-labs/kernelsu-antibootloop-backup/v1.0.0/CHANGELOG.md"
+        }
+      ]
+    }
+  ]
+}
