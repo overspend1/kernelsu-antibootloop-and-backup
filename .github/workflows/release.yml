@@ -37,11 +37,13 @@ jobs:
         sed -i "s/version=.*/version=$VERSION/" kernelsu_antibootloop_backup/module.prop
         sed -i "s/versionCode=.*/versionCode=$VERSION_CODE/" kernelsu_antibootloop_backup/module.prop
         
-    - name: Create module ZIP
+    - name: Create Module ZIP
       run: |
         cd kernelsu_antibootloop_backup
-        zip -r ../kernelsu_antibootloop_backup-${{ steps.version.outputs.version }}.zip .
+        zip -r ../kernelsu_antibootloop_backup-${{ steps.version.outputs.version }}.zip . -x "*.git*" "*.md" "docs/*" "tests/*"
         cd ..
+        echo "ZIP_FILE=kernelsu_antibootloop_backup-${{ steps.version.outputs.version }}.zip" >> $GITHUB_ENV
+        echo "Created ZIP file: kernelsu_antibootloop_backup-${{ steps.version.outputs.version }}.zip"
         
     - name: Generate changelog
       id: changelog
@@ -87,12 +89,7 @@ jobs:
         tag_name: ${{ steps.version.outputs.version }}
         name: KernelSU Anti-Bootloop & Backup ${{ steps.version.outputs.version }}
         body_path: CHANGELOG.md
-        files: |
-          kernelsu_antibootloop_backup-${{ steps.version.outputs.version }}.zip
-          kernelsu_antibootloop_backup-v1.0.0-fixed.zip
-          kernelsu_antibootloop_backup-v1.0.0.tar.gz
-          kernelsu_antibootloop_backup-v1.0.0.zip
-          kernelsu_antibootloop_backup_v1.0.0.zip
+        files: ${{ env.ZIP_FILE }}
         draft: false
         prerelease: false
       env:
