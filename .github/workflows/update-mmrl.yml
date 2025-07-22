@@ -1,0 +1,211 @@
+name: Update MMRL Repository
+
+on:
+  release:
+    types: [published]
+  repository_dispatch:
+    types: [update-mmrl]
+  workflow_dispatch:
+  schedule:
+    # Update daily at 00:00 UTC
+    - cron: '0 0 * * *'
+
+jobs:
+  update-mmrl:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Get latest release info
+      id: release
+      run: |
+        # Get latest release information
+        LATEST_RELEASE=$(curl -s https://api.github.com/repos/overspend1/overmodules/releases/latest)
+        
+        if [ "$LATEST_RELEASE" != "null" ] && [ "$(echo $LATEST_RELEASE | jq -r '.message // empty')" != "Not Found" ]; then
+          VERSION=$(echo $LATEST_RELEASE | jq -r '.tag_name')
+          VERSION_CODE=$(echo $VERSION | sed 's/v//' | sed 's/\.//g')
+          DOWNLOAD_URL=$(echo $LATEST_RELEASE | jq -r '.assets[] | select(.name | contains("kernelsu_antibootloop_backup-" + "'$VERSION'" + ".zip")) | .browser_download_url')
+          TIMESTAMP=$(date +%s)
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
+          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+        else
+          # Fallback to current version if no releases
+          echo "version=v1.0.0" >> $GITHUB_OUTPUT
+          echo "version_code=100" >> $GITHUB_OUTPUT
+          echo "download_url=https://github.com/overspend1/overmodules/raw/master/kernelsu_antibootloop_backup-v1.0.0-fixed.zip" >> $GITHUB_OUTPUT
+          echo "timestamp=$(date +%s)" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Create/Update MMRL repository files
+      run: |
+        mkdir -p mmrl-repo
+        
+        # Create repo.json
+        cat > mmrl-repo/repo.json << EOF
+        {
+          "name": "Terragon Labs KernelSU Modules",
+          "website": "https://github.com/overspend1/overmodules",
+          "support": "https://github.com/overspend1/overmodules/issues",
+          "donate": "https://github.com/sponsors/overspend1",
+          "submitModule": "https://github.com/overspend1/overmodules/issues/new",
+          "last_update": ${{ steps.release.outputs.timestamp }},
+          "modules": "https://raw.githubusercontent.com/overspend1/overmodules/master/mmrl-repo/modules.json"
+        }
+        EOF
+        
+        # Create modules.json
+        cat > mmrl-repo/modules.json << EOF
+        {
+          "modules": [
+            {
+              "id": "kernelsu_antibootloop_backup",
+              "name": "KernelSU Anti-Bootloop & Backup",
+              "version": "${{ steps.release.outputs.version }}",
+              "versionCode": ${{ steps.release.outputs.version_code }},
+              "author": "Wiktor/overspend1",
+              "description": "Advanced KernelSU Next module combining anti-bootloop protection with comprehensive backup and restoration capabilities. Features WebUIX-compliant interface, encrypted backups, and multi-stage recovery mechanisms.",
+              "minApi": 33,
+              "maxApi": 35,
+              "minKernelSU": 10940,
+              "maxKernelSU": 99999,
+              "needRamdisk": false,
+              "support": "https://github.com/overspend1/overmodules/issues",
+              "donate": "https://github.com/sponsors/overspend1",
+              "license": "MIT",
+              "homepage": "https://github.com/overspend1/overmodules",
+              "source": "https://github.com/overspend1/overmodules",
+              "readme": "https://raw.githubusercontent.com/overspend1/overmodules/master/README.md",
+              "verified": false,
+              "timestamp": ${{ steps.release.outputs.timestamp }},
+              "antifeatures": [],
+              "categories": [
+                "System",
+                "Backup",
+                "Recovery",
+                "Security"
+              ],
+              "features": [
+                "Anti-bootloop protection",
+                "Comprehensive backup system",
+                "WebUI interface",
+                "Encrypted backups",
+                "Multi-stage recovery",
+                "OverlayFS integration",
+                "Hardware button recovery",
+                "Progressive Web App"
+              ],
+              "require": [
+                "kernelsu"
+              ],
+              "root": {
+                "kernelsu": {
+                  "minVersion": 10940,
+                  "maxVersion": 99999
+                }
+              },
+              "manager": {
+                "mmrl": {
+                  "minVersion": 2024120900,
+                  "maxVersion": 2147483647
+                }
+              },
+              "track": {
+                "type": "GIT",
+                "source": "https://github.com/overspend1/overmodules",
+                "build": {
+                  "enable": true,
+                  "keep": 3
+                }
+              },
+              "versions": [
+                {
+                  "timestamp": ${{ steps.release.outputs.timestamp }},
+                  "version": "${{ steps.release.outputs.version }}",
+                  "versionCode": ${{ steps.release.outputs.version_code }},
+                  "zipUrl": "${{ steps.release.outputs.download_url }}",
+                  "changelog": "https://raw.githubusercontent.com/overspend1/overmodules/${{ steps.release.outputs.version }}/CHANGELOG.md"
+                }
+              ]
+            }
+          ]
+        }
+        EOF
+        
+    - name: Create MMRL repository README
+      run: |
+        cat > mmrl-repo/README.md << 'EOF'
+        # Terragon Labs MMRL Repository
+        
+        This is an MMRL (Magisk Module Repository List) repository containing KernelSU modules developed by Terragon Labs.
+        
+        ## Available Modules
+        
+        ### KernelSU Anti-Bootloop & Backup
+        
+        **Advanced KernelSU module combining anti-bootloop protection with comprehensive backup and restoration capabilities.**
+        
+        #### Features:
+        - 🛡️ **Anti-bootloop protection** with automatic recovery mechanisms
+        - 💾 **Comprehensive backup system** with encrypted storage
+        - 🌐 **WebUI interface** for easy management
+        - 🔒 **Encrypted backups** with hybrid RSA+AES encryption
+        - 🔄 **Multi-stage recovery** with escalating intervention levels
+        - 📱 **OverlayFS integration** leveraging KernelSU's kernel-level capabilities
+        - 🔘 **Hardware button recovery** using volume buttons for emergency access
+        - 📱 **Progressive Web App** with Material Design interface
+        
+        #### Requirements:
+        - Android API 33-35
+        - KernelSU v0.7.0+ (version code 10940+)
+        - ARM64 architecture
+        
+        ## How to Add This Repository to MMRL
+        
+        1. Open MMRL app
+        2. Go to **Settings** → **Repositories**
+        3. Tap **Add Repository**
+        4. Enter the repository URL:
+           ```
+           https://raw.githubusercontent.com/overspend1/overmodules/master/mmrl-repo/repo.json
+           ```
+        5. Tap **Add** and wait for the repository to sync
+        
+        ## Support
+        
+        - **Issues**: [GitHub Issues](https://github.com/overspend1/overmodules/issues)
+        - **Discussions**: [GitHub Discussions](https://github.com/overspend1/overmodules/discussions)
+        - **Donations**: [GitHub Sponsors](https://github.com/sponsors/overspend1)
+        
+        ---
+        
+        **Terragon Labs** - Advanced Android System Modifications
+        EOF
+        
+    - name: Validate JSON files
+      run: |
+        echo "Validating repo.json..."
+        python3 -m json.tool mmrl-repo/repo.json > /dev/null
+        echo "✅ repo.json is valid"
+        
+        echo "Validating modules.json..."
+        python3 -m json.tool mmrl-repo/modules.json > /dev/null
+        echo "✅ modules.json is valid"
+        
+    - name: Commit and push MMRL repository
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add mmrl-repo/
+        git diff --staged --quiet || git commit -m "🤖 Auto-update MMRL repository to ${{ steps.release.outputs.version }}"
+        git push

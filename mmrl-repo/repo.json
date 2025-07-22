@@ -1,9 +1,9 @@
 {
   "name": "Terragon Labs KernelSU Modules",
-  "website": "https://github.com/terragon-labs",
-  "support": "https://github.com/terragon-labs/kernelsu-antibootloop-backup/issues",
-  "donate": "https://github.com/sponsors/terragon-labs",
-  "submitModule": "https://github.com/terragon-labs/kernelsu-antibootloop-backup/issues/new",
+  "website": "https://github.com/overspend1/overmodules",
+  "support": "https://github.com/overspend1/overmodules/issues",
+  "donate": "https://github.com/sponsors/overspend1",
+  "submitModule": "https://github.com/overspend1/overmodules/issues/new",
   "last_update": 1737513420,
-  "modules": "https://raw.githubusercontent.com/terragon-labs/mmrl-repo/main/modules.json"
+  "modules": "https://raw.githubusercontent.com/overspend1/overmodules/master/mmrl-repo/modules.json"
 }

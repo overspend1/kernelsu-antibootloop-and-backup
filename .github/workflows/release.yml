@@ -1,0 +1,108 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set version from input or tag
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Update module.prop version
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        VERSION_CODE=$(echo $VERSION | sed 's/v//' | sed 's/\.//g')
+        
+        # Update version in module.prop
+        sed -i "s/version=.*/version=$VERSION/" kernelsu_antibootloop_backup/module.prop
+        sed -i "s/versionCode=.*/versionCode=$VERSION_CODE/" kernelsu_antibootloop_backup/module.prop
+        
+    - name: Create module ZIP
+      run: |
+        cd kernelsu_antibootloop_backup
+        zip -r ../kernelsu_antibootloop_backup-${{ steps.version.outputs.version }}.zip .
+        cd ..
+        
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Get commits since last tag
+        LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        if [ -z "$LAST_TAG" ]; then
+          CHANGELOG=$(git log --pretty=format:"- %s" --no-merges)
+        else
+          CHANGELOG=$(git log $LAST_TAG..HEAD --pretty=format:"- %s" --no-merges)
+        fi
+        
+        # Create changelog file
+        cat > CHANGELOG.md << EOF
+        # Changelog for ${{ steps.version.outputs.version }}
+        
+        ## Changes
+        $CHANGELOG
+        
+        ## Features
+        - 🛡️ Anti-bootloop protection with automatic recovery
+        - 💾 Comprehensive backup system with encryption
+        - 🌐 WebUI interface for easy management
+        - 🔒 Hybrid RSA+AES encryption for secure backups
+        - 🔄 Multi-stage recovery mechanisms
+        - 📱 Progressive Web App with Material Design
+        
+        ## Requirements
+        - Android API 33-35
+        - KernelSU v0.7.0+ (version code 10940+)
+        - ARM64 architecture
+        
+        ## Installation
+        1. Download the ZIP file from this release
+        2. Install via KernelSU Manager or MMRL app
+        3. Reboot your device
+        4. Access WebUI through KernelSU manager
+        EOF
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.version.outputs.version }}
+        name: KernelSU Anti-Bootloop & Backup ${{ steps.version.outputs.version }}
+        body_path: CHANGELOG.md
+        files: |
+          kernelsu_antibootloop_backup-${{ steps.version.outputs.version }}.zip
+          kernelsu_antibootloop_backup-v1.0.0-fixed.zip
+          kernelsu_antibootloop_backup-v1.0.0.tar.gz
+          kernelsu_antibootloop_backup-v1.0.0.zip
+          kernelsu_antibootloop_backup_v1.0.0.zip
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Update MMRL repository
+      run: |
+        # This will trigger the MMRL repository update workflow
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/overspend1/overmodules/dispatches \
+          -d '{"event_type":"update-mmrl"}'
