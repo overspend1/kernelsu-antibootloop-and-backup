@@ -1,4 +1,8 @@
 {
+  "metadata": {
+    "timestamp": 1737513420,
+    "version": "1.2.0"
+  },
   "modules": [
     {
       "id": "kernelsu_antibootloop_backup",
@@ -12,30 +16,42 @@
       "minKernelSU": 10940,
       "maxKernelSU": 99999,
       "needRamdisk": false,
+      "updateJson": "https://raw.githubusercontent.com/overspend1/kernelsu-antibootloop-and-backup/terragon/fix-mmrl-repo-improve-webui/kernelsu_antibootloop_backup/update.json",
       "support": "https://github.com/overspend1/kernelsu-antibootloop-and-backup/issues",
       "donate": "https://github.com/sponsors/overspend1",
       "license": "MIT",
       "homepage": "https://github.com/overspend1/kernelsu-antibootloop-and-backup",
       "source": "https://github.com/overspend1/kernelsu-antibootloop-and-backup",
-      "readme": "https://raw.githubusercontent.com/overspend1/kernelsu-antibootloop-and-backup/master/README.md",
+      "readme": "https://raw.githubusercontent.com/overspend1/kernelsu-antibootloop-and-backup/terragon/fix-mmrl-repo-improve-webui/README.md",
       "verified": false,
       "timestamp": 1737513420,
       "antifeatures": [],
       "categories": [
         "System",
-        "Backup",
+        "Backup", 
         "Recovery",
-        "Security"
+        "Security",
+        "Utility"
+      ],
+      "tags": [
+        "bootloop",
+        "backup",
+        "recovery",
+        "kernelsu",
+        "webui",
+        "safety"
       ],
       "features": [
         "Anti-bootloop protection",
-        "Comprehensive backup system",
+        "Comprehensive backup system", 
         "WebUI interface",
         "Encrypted backups",
         "Multi-stage recovery",
         "OverlayFS integration",
         "Hardware button recovery",
-        "Progressive Web App"
+        "Progressive Web App",
+        "Real-time monitoring",
+        "Automated recovery"
       ],
       "require": [
         "kernelsu"
@@ -60,13 +76,19 @@
           "keep": 3
         }
       },
+      "cover": "https://raw.githubusercontent.com/overspend1/kernelsu-antibootloop-and-backup/terragon/fix-mmrl-repo-improve-webui/assets/cover.png",
+      "icon": "https://raw.githubusercontent.com/overspend1/kernelsu-antibootloop-and-backup/terragon/fix-mmrl-repo-improve-webui/assets/icon.png",
+      "screenshots": [
+        "https://raw.githubusercontent.com/overspend1/kernelsu-antibootloop-and-backup/terragon/fix-mmrl-repo-improve-webui/assets/screenshot1.png",
+        "https://raw.githubusercontent.com/overspend1/kernelsu-antibootloop-and-backup/terragon/fix-mmrl-repo-improve-webui/assets/screenshot2.png"
+      ],
       "versions": [
         {
           "timestamp": 1737513420,
           "version": "v1.0.0",
           "versionCode": 100,
           "zipUrl": "https://github.com/overspend1/kernelsu-antibootloop-and-backup/releases/latest/download/kernelsu_antibootloop_backup-v1.0.0.zip",
-          "changelog": "https://raw.githubusercontent.com/overspend1/kernelsu-antibootloop-and-backup/v1.0.0/CHANGELOG.md"
+          "changelog": "https://raw.githubusercontent.com/overspend1/kernelsu-antibootloop-and-backup/terragon/fix-mmrl-repo-improve-webui/CHANGELOG.md"
         }
       ]
     }

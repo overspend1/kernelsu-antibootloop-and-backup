@@ -978,14 +978,17 @@ const UIController = {
      */
     showModal: function(title, content, confirmCallback) {
         const modal = document.getElementById('modal-container');
-        const modalTitle = document.querySelector('.md-dialog-title');
-        const modalBody = document.querySelector('.md-dialog-body');
+        if (!modal) {
+            this.createModal();
+        }
+        
+        const modalTitle = document.querySelector('.modal-title');
+        const modalBody = document.querySelector('.modal-body');
         const modalConfirm = document.getElementById('modal-confirm');
         
-        if (!modal || !modalTitle || !modalBody) {
+        if (!modalTitle || !modalBody) {
             console.error('Modal elements not found');
-            this.createModal();
-            return this.showModal(title, content, confirmCallback);
+            return;
         }
         
         // Set modal content
@@ -1167,6 +1170,92 @@ const UIController = {
         if (cancelButton) {
             cancelButton.textContent = cancelText;
         }
+    },
+    
+    /**
+     * Show custom dialog with custom actions
+     * @param {string} title - Dialog title
+     * @param {string} content - Dialog content HTML
+     * @param {string} confirmText - Confirm button text
+     * @param {string} cancelText - Cancel button text
+     * @param {Function} confirmCallback - Confirm callback
+     */
+    showConfirmDialog: function(title, content, confirmText, cancelText, confirmCallback) {
+        this.showModal(title, content, confirmCallback);
+        
+        // Update button text
+        const confirmButton = document.getElementById('modal-confirm');
+        const cancelButton = document.getElementById('modal-cancel');
+        
+        if (confirmButton && confirmText) {
+            confirmButton.textContent = confirmText;
+        }
+        
+        if (cancelButton && cancelText) {
+            cancelButton.textContent = cancelText;
+        }
+    },
+    
+    /**
+     * Show custom dialog with HTML content
+     * @param {string} title - Dialog title
+     * @param {string} content - Dialog content HTML
+     * @param {string} confirmText - Confirm button text
+     * @param {string} cancelText - Cancel button text
+     * @param {Function} confirmCallback - Confirm callback
+     */
+    showCustomDialog: function(title, content, confirmText, cancelText, confirmCallback) {
+        this.showModal(title, content, confirmCallback);
+        
+        // Update button text
+        const confirmButton = document.getElementById('modal-confirm');
+        const cancelButton = document.getElementById('modal-cancel');
+        
+        if (confirmButton && confirmText) {
+            confirmButton.textContent = confirmText;
+        }
+        
+        if (cancelButton && cancelText) {
+            cancelButton.textContent = cancelText;
+        }
+    },
+    
+    /**
+     * Show toast notification (alias for showNotification)
+     * @param {string} message - Toast message
+     * @param {string} type - Toast type
+     */
+    showToast: function(message, type) {
+        this.showNotification(message, type, 3000);
+    },
+    
+    /**
+     * Show loader with message
+     * @param {string} message - Loading message
+     */
+    showLoader: function(message) {
+        // Remove existing loader
+        this.hideLoader();
+        
+        // Create new loader
+        this.currentLoader = this.createLoader(message);
+    },
+    
+    /**
+     * Hide loader
+     */
+    hideLoader: function() {
+        if (this.currentLoader) {
+            this.currentLoader.remove();
+            this.currentLoader = null;
+        }
+    },
+    
+    /**
+     * Initialize all UI components
+     */
+    initializeAll: function() {
+        this.init();
     }
 };
 

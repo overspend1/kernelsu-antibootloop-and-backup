@@ -9,6 +9,7 @@
     <meta name="author" content="KernelSU Community">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/improvements.css">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0idXJsKCNncmFkaWVudDApIi8+CjxwYXRoIGQ9Ik0xNiA4QzEyLjY4NjMgOCAxMCAxMC42ODYzIDEwIDE0VjE4QzEwIDIxLjMxMzcgMTIuNjg2MyAyNCAxNiAyNEMxOS4zMTM3IDI0IDIyIDIxLjMxMzcgMjIgMThWMTRDMjIgMTAuNjg2MyAxOS4zMTM3IDggMTYgOFoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0xNiAxMkMxNC44OTU0IDEyIDE0IDEyLjg5NTQgMTQgMTRWMThDMTQgMTkuMTA0NiAxNC44OTU0IDIwIDE2IDIwQzE3LjEwNDYgMjAgMTggMTkuMTA0NiAxOCAxOFYxNEMxOCAxMi44OTU0IDE3LjEwNDYgMTIgMTYgMTJaIiBmaWxsPSIjNjY3ZWVhIi8+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9ImdyYWRpZW50MCIgeDE9IjAiIHkxPSIwIiB4Mj0iMzIiIHkyPSIzMiIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPgo8c3RvcCBzdG9wLWNvbG9yPSIjNjY3ZWVhIi8+CjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzc2NGJhMiIvPgo8L2xpbmVhckdyYWRpZW50Pgo8L2RlZnM+Cjwvc3ZnPgo=">
 </head>
 <body>
@@ -58,10 +59,10 @@
 
         <!-- Navigation Tabs for Mobile -->
         <div class="nav-tabs">
-            <button class="nav-tab active" onclick="switchTab('dashboard')">Dashboard</button>
-            <button class="nav-tab" onclick="switchTab('backup')">Backup</button>
-            <button class="nav-tab" onclick="switchTab('monitor')">Monitor</button>
-            <button class="nav-tab" onclick="switchTab('settings')">Settings</button>
+            <button class="nav-tab active" onclick="switchTab('dashboard')" data-page="dashboard">Dashboard</button>
+            <button class="nav-tab" onclick="switchTab('backup')" data-page="backup">Backup</button>
+            <button class="nav-tab" onclick="switchTab('monitor')" data-page="monitor">Monitor</button>
+            <button class="nav-tab" onclick="switchTab('settings')" data-page="settings">Settings</button>
         </div>
 
         <!-- Dashboard Tab -->
@@ -230,6 +231,7 @@
     <script src="js/api.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/dashboard.js"></script>
+    <script src="js/navigation.js"></script>
     <script src="js/main.js"></script>
     <script src="app.js"></script>
 </body>
