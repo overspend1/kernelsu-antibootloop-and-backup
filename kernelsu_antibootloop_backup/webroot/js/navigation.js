@@ -566,3 +566,8 @@ window.toggleRealTimeMonitoring = toggleRealTimeMonitoring;
 window.exportMetrics = exportMetrics;
 window.updateSetting = updateSetting;
 window.refreshLogs = refreshLogs;
+
+// Ensure global showToast function is available for compatibility
+if (!window.showToast && typeof UI !== 'undefined' && UI.showToast) {
+    window.showToast = UI.showToast.bind(UI);
+}

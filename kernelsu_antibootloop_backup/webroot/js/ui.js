@@ -978,14 +978,17 @@ const UIController = {
      */
     showModal: function(title, content, confirmCallback) {
         const modal = document.getElementById('modal-container');
-        const modalTitle = document.querySelector('.md-dialog-title');
-        const modalBody = document.querySelector('.md-dialog-body');
+        if (!modal) {
+            this.createModal();
+        }
+        
+        const modalTitle = document.querySelector('.modal-title');
+        const modalBody = document.querySelector('.modal-body');
         const modalConfirm = document.getElementById('modal-confirm');
         
-        if (!modal || !modalTitle || !modalBody) {
+        if (!modalTitle || !modalBody) {
             console.error('Modal elements not found');
-            this.createModal();
-            return this.showModal(title, content, confirmCallback);
+            return;
         }
         
         // Set modal content

@@ -11,7 +11,13 @@ const KSU_API = {
     },
     toast: window.ksu?.toast || function(msg, type = 'info') {
         console.log('Toast:', msg, type);
-        showToast(msg, type);
+        if (typeof UI !== 'undefined' && UI.showToast) {
+            UI.showToast(msg, type);
+        } else if (typeof window.showToast === 'function') {
+            window.showToast(msg, type);
+        } else {
+            console.log('No toast function available');
+        }
     },
     moduleInfo: window.ksu?.moduleInfo || function() {
         return { 
