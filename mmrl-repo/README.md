@@ -1,6 +1,6 @@
-# Terragon Labs MMRL Repository
+# KernelSU Modules MMRL Repository
 
-This is an MMRL (Magisk Module Repository List) repository containing KernelSU modules developed by Terragon Labs.
+This is an MMRL (Magisk Module Repository List) repository containing KernelSU modules.
 
 ## Available Modules
 
@@ -62,4 +62,4 @@ MIT License - see individual module repositories for specific licensing informat
 
 ---
 
-**Terragon Labs** - Advanced Android System Modifications
+Advanced Android System Modifications

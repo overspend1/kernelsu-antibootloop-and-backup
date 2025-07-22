@@ -54,7 +54,7 @@ jobs:
         # Create repo.json
         cat > mmrl-repo/repo.json << EOF
         {
-          "name": "Terragon Labs KernelSU Modules",
+          "name": "KernelSU Modules",
           "website": "https://github.com/overspend1/overmodules",
           "support": "https://github.com/overspend1/overmodules/issues",
           "donate": "https://github.com/sponsors/overspend1",
@@ -145,9 +145,9 @@ jobs:
     - name: Create MMRL repository README
       run: |
         cat > mmrl-repo/README.md << 'EOF'
-        # Terragon Labs MMRL Repository
+        # KernelSU Modules MMRL Repository
         
-        This is an MMRL (Magisk Module Repository List) repository containing KernelSU modules developed by Terragon Labs.
+        This is an MMRL (Magisk Module Repository List) repository containing KernelSU modules.
         
         ## Available Modules
         
@@ -189,7 +189,7 @@ jobs:
         
         ---
         
-        **Terragon Labs** - Advanced Android System Modifications
+        Advanced Android System Modifications
         EOF
         
     - name: Validate JSON files

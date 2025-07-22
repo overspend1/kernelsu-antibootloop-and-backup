@@ -16,7 +16,7 @@
 
 2. **Install the Module:**
    - Open MMRL app
-   - Go to **Repositories** → **Terragon Labs KernelSU Modules**
+   - Go to **Repositories** → **KernelSU Modules**
    - Find **KernelSU Anti-Bootloop & Backup**
    - Tap **Install**
 
@@ -130,4 +130,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Terragon Labs** - Advanced Android System Modifications
+Advanced Android System Modifications
