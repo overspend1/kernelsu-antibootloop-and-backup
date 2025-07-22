@@ -103,7 +103,7 @@ jobs:
         EOF
         
     - name: Create GitHub Release
-       uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v1
        with:
          tag_name: ${{ steps.version.outputs.version }}
          release_name: "KernelSU Anti-Bootloop & Backup ${{ steps.version.outputs.version }}"
