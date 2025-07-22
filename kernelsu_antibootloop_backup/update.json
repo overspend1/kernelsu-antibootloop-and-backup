@@ -10,8 +10,7 @@
   "author": "Wiktor/overspend1",
   "donation": "https://github.com/sponsors/overspend1",
   "issues": "https://github.com/overspend1/kernelsu-antibootloop-and-backup/issues",
-  "discussion": "https://github.com/overspend1/kernelsu-antibootloop-and-backup/discussions"
-},
+  "discussion": "https://github.com/overspend1/kernelsu-antibootloop-and-backup/discussions",
   "compatibility": {
     "kernelsu": ">=0.7.0",
     "android": ["13", "14", "15"],
