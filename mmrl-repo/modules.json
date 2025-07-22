@@ -12,12 +12,12 @@
       "minKernelSU": 10940,
       "maxKernelSU": 99999,
       "needRamdisk": false,
-      "support": "https://github.com/overspend1/overmodules/issues",
+      "support": "https://github.com/overspend1/kernelsu-antibootloop-and-backup/issues",
       "donate": "https://github.com/sponsors/overspend1",
       "license": "MIT",
-      "homepage": "https://github.com/overspend1/overmodules",
-      "source": "https://github.com/overspend1/overmodules",
-      "readme": "https://raw.githubusercontent.com/overspend1/overmodules/master/README.md",
+      "homepage": "https://github.com/overspend1/kernelsu-antibootloop-and-backup",
+      "source": "https://github.com/overspend1/kernelsu-antibootloop-and-backup",
+      "readme": "https://raw.githubusercontent.com/overspend1/kernelsu-antibootloop-and-backup/master/README.md",
       "verified": false,
       "timestamp": 1737513420,
       "antifeatures": [],
@@ -54,7 +54,7 @@
       },
       "track": {
         "type": "GIT",
-        "source": "https://github.com/overspend1/overmodules",
+        "source": "https://github.com/overspend1/kernelsu-antibootloop-and-backup",
         "build": {
           "enable": true,
           "keep": 3
@@ -65,8 +65,8 @@
           "timestamp": 1737513420,
           "version": "v1.0.0",
           "versionCode": 100,
-          "zipUrl": "https://github.com/overspend1/overmodules/releases/latest/download/kernelsu_antibootloop_backup-v1.0.0.zip",
-          "changelog": "https://raw.githubusercontent.com/overspend1/overmodules/v1.0.0/CHANGELOG.md"
+          "zipUrl": "https://github.com/overspend1/kernelsu-antibootloop-and-backup/releases/latest/download/kernelsu_antibootloop_backup-v1.0.0.zip",
+          "changelog": "https://raw.githubusercontent.com/overspend1/kernelsu-antibootloop-and-backup/v1.0.0/CHANGELOG.md"
         }
       ]
     }

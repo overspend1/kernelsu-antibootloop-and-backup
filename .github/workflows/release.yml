@@ -1,15 +1,15 @@
-name: Create Release
+name: Auto Release
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches:
+      - master
+      - main
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g., v1.0.0)'
-        required: true
-        default: 'v1.0.0'
+        description: 'Release version (e.g., v1.0.0)'
+        required: false
 
 jobs:
   create-release:
@@ -19,14 +19,24 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Set version from input or tag
+    - name: Set release version
       id: version
       run: |
-        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-          echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.version }}" ]; then
+          VERSION="${{ github.event.inputs.version }}"
         else
-          echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          # Generate version from commit info
+          COMMIT_COUNT=$(git rev-list --count HEAD)
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          VERSION="v1.0.${COMMIT_COUNT}-${SHORT_SHA}"
         fi
+        
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        
+        # Extract version code
+        VERSION_NUM=$(echo $VERSION | sed 's/v//' | sed 's/-.*//' | sed 's/\.//g')
+        echo "version_code=$VERSION_NUM" >> $GITHUB_OUTPUT
+        echo "Generated version: $VERSION (code: $VERSION_NUM)"
         
     - name: Update module.prop version
       run: |
@@ -40,10 +50,19 @@ jobs:
     - name: Create Module ZIP
       run: |
         cd kernelsu_antibootloop_backup
-        zip -r ../kernelsu_antibootloop_backup-${{ steps.version.outputs.version }}.zip . -x "*.git*" "*.md" "docs/*" "tests/*"
+        
+        # Smart naming based on module info
+        MODULE_ID=$(grep '^id=' module.prop | cut -d'=' -f2)
+        MODULE_NAME=$(grep '^name=' module.prop | cut -d'=' -f2 | sed 's/ /_/g')
+        VERSION="${{ steps.version.outputs.version }}"
+        
+        ZIP_NAME="${MODULE_ID}-${VERSION}.zip"
+        
+        zip -r ../$ZIP_NAME . -x "*.git*" "*.md" "docs/*" "tests/*"
         cd ..
-        echo "ZIP_FILE=kernelsu_antibootloop_backup-${{ steps.version.outputs.version }}.zip" >> $GITHUB_ENV
-        echo "Created ZIP file: kernelsu_antibootloop_backup-${{ steps.version.outputs.version }}.zip"
+        
+        echo "ZIP_FILE=$ZIP_NAME" >> $GITHUB_ENV
+        echo "Created ZIP file: $ZIP_NAME"
         
     - name: Generate changelog
       id: changelog
@@ -83,17 +102,18 @@ jobs:
         4. Access WebUI through KernelSU manager
         EOF
         
-    - name: Create Release
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: ${{ steps.version.outputs.version }}
-        name: KernelSU Anti-Bootloop & Backup ${{ steps.version.outputs.version }}
-        body_path: CHANGELOG.md
-        files: ${{ env.ZIP_FILE }}
-        draft: false
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Create GitHub Release
+       uses: softprops/action-gh-release@v1
+       with:
+         tag_name: ${{ steps.version.outputs.version }}
+         release_name: "KernelSU Anti-Bootloop & Backup ${{ steps.version.outputs.version }}"
+         body_path: ./CHANGELOG.md
+         files: ${{ env.ZIP_FILE }}
+         draft: false
+         prerelease: ${{ contains(steps.version.outputs.version, '-') }}
+         make_latest: true
+       env:
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
     - name: Update MMRL repository
       run: |
@@ -101,5 +121,5 @@ jobs:
         curl -X POST \
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -H "Accept: application/vnd.github.v3+json" \
-          https://api.github.com/repos/overspend1/overmodules/dispatches \
+          https://api.github.com/repos/overspend1/kernelsu-antibootloop-and-backup/dispatches \
           -d '{"event_type":"update-mmrl"}'

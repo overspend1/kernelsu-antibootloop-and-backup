@@ -1,9 +1,9 @@
 {
   "name": "KernelSU Modules",
-  "website": "https://github.com/overspend1/overmodules",
-  "support": "https://github.com/overspend1/overmodules/issues",
+  "website": "https://github.com/overspend1/kernelsu-antibootloop-and-backup",
+  "support": "https://github.com/overspend1/kernelsu-antibootloop-and-backup/issues",
   "donate": "https://github.com/sponsors/overspend1",
-  "submitModule": "https://github.com/overspend1/overmodules/issues/new",
-  "last_update": 1737513420,
-  "modules": "https://raw.githubusercontent.com/overspend1/overmodules/master/mmrl-repo/modules.json"
+  "submitModule": "https://github.com/overspend1/kernelsu-antibootloop-and-backup/issues/new",
+  "maxRepo": 3,
+  "modules": "https://raw.githubusercontent.com/overspend1/kernelsu-antibootloop-and-backup/master/mmrl-repo/modules.json"
 }

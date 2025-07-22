@@ -37,7 +37,7 @@ This is an MMRL (Magisk Module Repository List) repository containing KernelSU m
 3. Tap **Add Repository**
 4. Enter the repository URL:
    ```
-   https://raw.githubusercontent.com/terragon-labs/mmrl-repo/main/repo.json
+   https://raw.githubusercontent.com/overspend1/kernelsu-antibootloop-and-backup/master/mmrl-repo/repo.json
    ```
 5. Tap **Add** and wait for the repository to sync
 
@@ -52,9 +52,9 @@ mmrl-repo/
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/terragon-labs/kernelsu-antibootloop-backup/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/terragon-labs/kernelsu-antibootloop-backup/discussions)
-- **Donations**: [GitHub Sponsors](https://github.com/sponsors/terragon-labs)
+- **Issues**: [GitHub Issues](https://github.com/overspend1/kernelsu-antibootloop-and-backup/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/overspend1/kernelsu-antibootloop-and-backup/discussions)
+- **Main Repository**: [GitHub Repository](https://github.com/overspend1/kernelsu-antibootloop-and-backup)
 
 ## License
 

@@ -1,7 +1,7 @@
 # KernelSU Anti-Bootloop & Backup Module
 
-[![Release](https://img.shields.io/github/v/release/overspend1/overmodules?style=for-the-badge)](https://github.com/overspend1/overmodules/releases/latest)
-[![License](https://img.shields.io/github/license/overspend1/overmodules?style=for-the-badge)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/overspend1/kernelsu-antibootloop-and-backup?style=for-the-badge)](https://github.com/overspend1/kernelsu-antibootloop-and-backup/releases/latest)
+[![License](https://img.shields.io/github/license/overspend1/kernelsu-antibootloop-and-backup?style=for-the-badge)](LICENSE)
 [![MMRL](https://img.shields.io/badge/MMRL-Compatible-blue?style=for-the-badge)](https://github.com/DerGoogler/MMRL)
 [![KernelSU](https://img.shields.io/badge/KernelSU-v0.7.0+-green?style=for-the-badge)](https://kernelsu.org)
 
@@ -11,7 +11,7 @@
 
 1. **Add Repository to MMRL:**
    ```
-   https://raw.githubusercontent.com/overspend1/overmodules/master/mmrl-repo/repo.json
+   https://raw.githubusercontent.com/overspend1/kernelsu-antibootloop-and-backup/master/mmrl-repo/repo.json
    ```
 
 2. **Install the Module:**
@@ -40,7 +40,7 @@
 
 ## 🔧 Manual Installation
 
-1. Download the latest release ZIP from [Releases](https://github.com/overspend1/overmodules/releases/latest)
+1. Download the latest release ZIP from [Releases](https://github.com/overspend1/kernelsu-antibootloop-and-backup/releases/latest)
 2. Install via KernelSU Manager:
    - Open KernelSU Manager
    - Go to **Modules** tab
@@ -96,7 +96,7 @@ This repository uses automated GitHub Actions workflows for releases and MMRL in
 
 This repository automatically maintains an MMRL-compatible repository at:
 
-**Repository URL:** `https://raw.githubusercontent.com/overspend1/overmodules/master/mmrl-repo/repo.json`
+**Repository URL:** `https://raw.githubusercontent.com/overspend1/kernelsu-antibootloop-and-backup/master/mmrl-repo/repo.json`
 
 ### Features:
 - ✅ Automatic updates when new releases are created
@@ -120,8 +120,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🤝 Support
 
-- **Issues:** [GitHub Issues](https://github.com/overspend1/overmodules/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/overspend1/overmodules/discussions)
+- **Issues:** [GitHub Issues](https://github.com/overspend1/kernelsu-antibootloop-and-backup/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/overspend1/kernelsu-antibootloop-and-backup/discussions)
 - **Donations:** [GitHub Sponsors](https://github.com/sponsors/overspend1)
 
 ## 🏷️ Version History
